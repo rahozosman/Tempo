@@ -1,4 +1,5 @@
 # Tempo
+<<<<<<< HEAD
 
 **Screen time, measured beautifully.** A private desktop screen-time tracker
 for Windows and macOS, built with Flutter.
@@ -498,3 +499,6 @@ you will not find here:
 `DESIGN.md` holds the design direction, `RULES.md` the working agreement, and
 `PROGRESS.md` a phase-by-phase record of what was built and where each phase
 stopped.
+=======
+Tempo is a screen-time app for macOS and Windows. It quietly measures where your hours actually go — active time, apps, sessions — and lays them out in a calm midnight-blue interface: daily rings, weekly bars, a yearly heatmap, honest insights. Everything stays on your machine.
+>>>>>>> b23811f7a1952605469de2dc6dd9878952b6009d
