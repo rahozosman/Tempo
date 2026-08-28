@@ -28,16 +28,17 @@ Everything it records stays in a single file on your computer.
 2. [Screens](#screens)
 3. [What it measures — and what it refuses to](#what-it-measures--and-what-it-refuses-to)
 4. [Platform support](#platform-support)
-5. [Install and run](#install-and-run)
-6. [Build a release](#build-a-release)
-7. [Keyboard](#keyboard)
-8. [Where your data lives](#where-your-data-lives)
-9. [Architecture](#architecture)
-10. [How tracking works](#how-tracking-works)
-11. [Sharing and exporting](#sharing-and-exporting)
-12. [Troubleshooting](#troubleshooting)
-13. [Project files](#project-files)
-14. [Developer](#developer)
+5. [Download a build](#download-a-build)
+6. [Install and run](#install-and-run)
+7. [Build a release](#build-a-release)
+8. [Keyboard](#keyboard)
+9. [Where your data lives](#where-your-data-lives)
+10. [Architecture](#architecture)
+11. [How tracking works](#how-tracking-works)
+12. [Sharing and exporting](#sharing-and-exporting)
+13. [Troubleshooting](#troubleshooting)
+14. [Project files](#project-files)
+15. [Developer](#developer)
 
 ---
 
@@ -131,6 +132,49 @@ the engine, not just the display.
 
 Settings reports the real permission state as the platform gives it, rather
 than assuming.
+
+---
+
+## Download a build
+
+You do not need Flutter, Xcode or Visual Studio to run Tempo — GitHub builds
+both desktop versions for you.
+
+**From a release** (the tidy way)
+
+Open [Releases](https://github.com/rahozosman/Tempo/releases) and take
+`Tempo-Windows.zip` or `Tempo-macOS.zip` from the newest one.
+
+**From any build**
+
+Every push to `main` builds both platforms. Open the
+[Actions](https://github.com/rahozosman/Tempo/actions) tab → the **Build** run
+you want → **Artifacts** at the bottom of the page. You can also start a build
+by hand from that tab with **Run workflow**.
+
+> GitHub wraps artifacts in a zip of their own, so an Actions download unzips
+> once to reveal `Tempo-macOS.zip` / `Tempo-Windows.zip`. Release downloads do
+> not have that extra layer.
+
+**Windows** — unzip the whole folder somewhere permanent and run `Tempo.exe`.
+`Tempo.exe` needs the `data\` folder and the DLLs sitting beside it, which is
+why the zip is a folder rather than one file. The executable is unsigned, so
+SmartScreen shows *Windows protected your PC* on the first launch: **More
+info** → **Run anyway**.
+
+**macOS** — unzip and drag `Tempo.app` into `/Applications`. Everything the app
+needs is inside the bundle, so that one file is the whole application.
+
+The macOS build is **ad-hoc signed**, not Developer-ID signed — that needs a
+paid Apple Developer account. macOS quarantines unsigned downloads and claims
+the app is damaged, so clear the flag once:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Tempo.app
+```
+
+Or right-click the app → **Open** → **Open**, which offers the same escape
+hatch through the interface.
 
 ---
 

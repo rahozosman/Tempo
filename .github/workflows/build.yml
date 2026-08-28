@@ -1,0 +1,113 @@
+name: Build
+
+# Runs on every push to main, on any v* tag, and on demand from the Actions tab.
+# A tag build also attaches both packages to a GitHub Release.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # Matches the toolchain Tempo is developed against.
+  FLUTTER_VERSION: 3.44.7
+
+jobs:
+  macos:
+    name: macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable desktop support
+        run: flutter config --enable-macos-desktop
+
+      - name: Fetch packages
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Build release
+        run: flutter build macos --release
+
+      - name: Ad-hoc sign the bundle
+        # Not a Developer-ID signature. It only makes the bundle internally
+        # consistent so macOS will run it after the quarantine flag is cleared.
+        run: |
+          APP="build/macos/Build/Products/Release/Tempo.app"
+          codesign --force --deep --sign - "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+
+      - name: Package
+        # ditto, not zip: a .app is full of symlinks, and zip flattens them.
+        run: |
+          cd build/macos/Build/Products/Release
+          ditto -c -k --sequesterRsrc --keepParent "Tempo.app" "$GITHUB_WORKSPACE/Tempo-macOS.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tempo-macOS
+          path: Tempo-macOS.zip
+          if-no-files-found: error
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable desktop support
+        run: flutter config --enable-windows-desktop
+
+      - name: Fetch packages
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Build release
+        run: flutter build windows --release
+
+      - name: Package
+        # The whole Release folder: Tempo.exe needs data\ and the DLLs beside it.
+        run: |
+          Compress-Archive -Path "build\windows\x64\runner\Release\*" -DestinationPath "Tempo-Windows.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tempo-Windows
+          path: Tempo-Windows.zip
+          if-no-files-found: error
+
+  release:
+    name: Release
+    needs: [macos, windows]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*.zip
+          generate_release_notes: true
