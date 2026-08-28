@@ -62,7 +62,11 @@ class _ApplicationsPageState extends ConsumerState<ApplicationsPage> {
     // Long enough for the mark to travel, short enough to feel immediate.
     transitionDuration: TempoMotion.of(context, TempoDuration.page),
     reverseTransitionDuration: TempoMotion.of(context, TempoDuration.base),
-    opaque: false,
+    // Opaque: once the detail has settled, the ranked list beneath it stops
+    // being painted altogether. The detail view has no background of its own
+    // (the shell's ambient backdrop shows through), so a translucent route
+    // left the list showing through the detail — two screens at once.
+    opaque: true,
     barrierColor: Colors.transparent,
     pageBuilder:
         (
@@ -131,6 +135,25 @@ class _ApplicationsPageState extends ConsumerState<ApplicationsPage> {
                   Animation<double> animation,
                   Animation<double> secondary,
                 ) => const _RankedApplications(),
+            // While a detail is arriving on top, the list steps back out of
+            // the way rather than sitting fully lit underneath it; it comes
+            // back the same way as the detail leaves.
+            transitionsBuilder:
+                (
+                  BuildContext context,
+                  Animation<double> animation,
+                  Animation<double> secondary,
+                  Widget child,
+                ) => FadeTransition(
+                  opacity: Tween<double>(begin: 1, end: 0).animate(
+                    CurvedAnimation(
+                      parent: secondary,
+                      curve: TempoCurve.exit,
+                      reverseCurve: TempoCurve.entrance,
+                    ),
+                  ),
+                  child: child,
+                ),
           ),
         ),
       ),
