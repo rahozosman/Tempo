@@ -1,229 +1,255 @@
+<div align="center">
+
+<img src="assets/branding/tempo_icon.png" width="128" alt="Tempo" />
+
 # Tempo
-<<<<<<< HEAD
 
-**Screen time, measured beautifully.** A private desktop screen-time tracker
-for Windows and macOS, built with Flutter.
+**Screen time, measured beautifully.**
 
-Tempo watches which application is in front of you and for how long, turns that
-into sessions, and shows you your day, week, month and year. Everything it
-measures stays in one file on your computer.
+A private screen-time tracker for **Windows** and **macOS**. Tempo measures which
+application is in front of you and for how long, then shows you your day, your
+week, your month and your year — in one calm, midnight-blue interface.
+Everything it records stays in a single file on your computer.
+
+![Windows 10/11](https://img.shields.io/badge/Windows-10%20%2F%2011-4C8DFF?style=flat-square&logo=windows&logoColor=white)
+![macOS 10.15+](https://img.shields.io/badge/macOS-10.15%2B-8B5CFF?style=flat-square&logo=apple&logoColor=white)
+![Flutter](https://img.shields.io/badge/Flutter-3.44-45D1FD?style=flat-square&logo=flutter&logoColor=white)
+![No cloud](https://img.shields.io/badge/data-100%25%20on%20device-3AA675?style=flat-square)
+
+</div>
+
+![Tempo — Home](docs/screenshots/home.png)
 
 ---
 
 ## Contents
 
-1. [What it does](#what-it-does)
+1. [What Tempo is](#what-tempo-is)
 2. [Screens](#screens)
-3. [Privacy](#privacy)
-4. [Requirements](#requirements)
-5. [Permissions](#permissions)
-6. [Getting started](#getting-started)
-7. [Running](#running)
-8. [Building a release](#building-a-release)
+3. [What it measures — and what it refuses to](#what-it-measures--and-what-it-refuses-to)
+4. [Platform support](#platform-support)
+5. [Install and run](#install-and-run)
+6. [Build a release](#build-a-release)
+7. [Keyboard](#keyboard)
+8. [Where your data lives](#where-your-data-lives)
 9. [Architecture](#architecture)
 10. [How tracking works](#how-tracking-works)
-11. [The database](#the-database)
-12. [The year grid](#the-year-grid)
-13. [Sharing a report](#sharing-a-report)
-14. [Exporting your data](#exporting-your-data)
-15. [Looking after your data](#looking-after-your-data)
-16. [Preview data](#preview-data)
-17. [Known limitations](#known-limitations)
-18. [Troubleshooting](#troubleshooting)
-19. [Project rules](#project-rules)
+11. [Sharing and exporting](#sharing-and-exporting)
+12. [Troubleshooting](#troubleshooting)
+13. [Project files](#project-files)
+14. [Developer](#developer)
 
 ---
 
-## What it does
+## What Tempo is
 
-- Measures the **foreground application** and how long you spend in it, grouped
-  by application rather than by window: ten Chrome windows are one Chrome.
-- Separates **active time** from **idle time** — time the machine was awake but
-  untouched belongs to no application.
-- Keeps a full history: today, the week, the month, the year, and every
-  application's own record.
-- Runs from the **tray** so it keeps measuring with the window closed, and can
-  open when you sign in.
-- Shares a report you write yourself — as text, as an image, or handed to
-  WhatsApp — and exports everything as CSV or JSON.
-- Sorts applications into categories, so a day reads as work, communication,
-  browsing, media or games rather than a list of names.
-- Shows the day **as it happened** — every recorded stretch in its place on the
-  clock, not just totals.
-- Has a screen-time goal and **per-application daily limits**, and says when you
-  pass either without making a fuss.
-- Runs **focus blocks**: start one, and afterwards see how much of it actually
-  stayed in work applications — measured, not estimated.
-- Sends **one weekly digest** when the week turns, and nothing else unasked.
-- Keeps its own record honest: a diagnostics panel checks the stored history
-  against the rules the engine is meant to follow.
+Most screen-time tools are either a phone feature you cannot reach from a
+desktop, or a team dashboard that ships your day to somebody else's server.
+Tempo is neither. It is a **desktop application that answers one question
+honestly** — where did the hours go? — and keeps the answer to itself.
+
+- **One measurement.** The foreground application and the time it holds,
+  grouped by application rather than by window: ten Chrome windows are one
+  Chrome.
+- **Idle time counted separately.** Time the machine sits untouched is measured
+  but belongs to no application, so a lunch break never turns into an hour of
+  "work".
+- **Sessions, not samples.** Stretches are stored as real sessions with a start
+  and an end, so *longest unbroken run* and *number of sessions* mean something.
+- **Every scale of the same day.** Today, the week, the month, the year, the
+  applications behind them, and plain-language insights over any of it.
+- **Quiet by default.** It measures from the tray, opens at login if you ask,
+  and says something only when you pass the goal you set.
+- **Nothing leaves the machine.** No account, no telemetry, no network request
+  of its own.
 
 ---
 
 ## Screens
 
-| Screen | What it shows |
+**Today** — the day against the goal you set, hour by hour, with every session
+laid out on a single strip.
+
+![Tempo — Today](docs/screenshots/today.png)
+
+**Month** — a calendar that warms up on the days you worked, with any day's
+detail beside it: its hours, its sessions and the applications that filled it.
+
+![Tempo — Month](docs/screenshots/month.png)
+
+Nine screens in all, one visual system:
+
+| Screen | What it answers |
 |---|---|
-| **Home** | The day in one figure inside an activity ring, the week beside it, four statistics, and today's applications. |
-| **Today** | Screen time, active, idle and sessions; the daily goal; the day as it happened and as a shape; a focus block; daily limits; where the day went by category; every application ranked. |
-| **Applications** | Every application over today, seven days or thirty, with its share and trend. Opening one shows its whole history. |
-| **Week** | Seven days measured as screen time, active time or sessions, with last week ghosted behind each bar and a direct comparison. |
-| **Month** | A calendar where every day is shaded by screen time. Click a day to open it in place. |
-| **Year** | Every day of the year as one square, month by month, with the twelve monthly totals and computed insights. |
-| **Insights** | What the data actually says over a week, month or year — and the report you can share. |
-| **Settings** | Appearance, general behaviour, tracking, screen time, sharing, your data, privacy and about. |
-
-Weeks, months and years can all be stepped back through history; the year
-picker only offers years that have data.
+| **Home** | How is today going, and how does it compare to the last seven days? |
+| **Today** | Where did today actually go — hour by hour, session by session? |
+| **Applications** | What did I use, ranked, and what does one application look like over time? |
+| **Week** | Seven days side by side, and the shape of each one. |
+| **Month** | A calendar heatmap, with any day openable beside it. |
+| **Year** | Every day of the year in one contribution-style grid. |
+| **Insights** | Plain sentences about what actually changed, over a week, month or year. |
+| **About** | Who built it, what it measures, and how to get the most out of it. |
+| **Settings** | Goal, idle timeout, appearance, tray behaviour, export and deletion. |
 
 ---
 
-## Privacy
+## What it measures — and what it refuses to
 
-Tempo is a personal tool and is built like one.
+**Measured**
 
-- **No account, no cloud, no analytics, no advertising.** The app makes no
-  network requests of its own — not even to check for updates. Settings → About
-  can open the releases page, and it is your browser that makes that request.
-- **Only the application identity is read** — the executable on Windows, the
-  bundle identifier on macOS. No window titles, no documents, no addresses, no
-  screenshots.
-- **One local file.** Everything is stored in a single SQLite database in your
-  own application-support folder. Settings shows the exact path, and can delete
-  the whole history.
-- **Nothing leaves the machine unless you send it.** Sharing shows you the exact
-  text and image first; WhatsApp is opened with the message prefilled and you
-  press send yourself.
-- On first run Tempo explains all of this and asks before recording anything.
+- The identifier and display name of the frontmost application
+  (`chrome.exe` → *Google Chrome*).
+- How long it stayed in front, as a session with a start and an end.
+- How long the machine went untouched, from the system's own idle timer.
 
----
+**Never touched**
 
-## Requirements
+- No window titles, document names, URLs or file paths.
+- No keystrokes, no screenshots, no clipboard, no camera or microphone.
+- No account, no analytics, no crash reporting, no network request of any kind.
 
-**Both platforms**
+The first run explains all of this **before** a single second is recorded, and
+nothing is measured until you answer it. Turning tracking off in Settings stops
+the engine, not just the display.
 
-- Flutter (stable) with desktop support enabled. Developed against Flutter
-  3.44, Dart SDK `^3.12.2`.
-
-**Windows**
-
-- Windows 10 or 11.
-- Visual Studio 2022 with the *Desktop development with C++* workload.
-- Nothing to install for tracking itself: it uses the Win32 APIs already there.
-
-**macOS**
-
-- macOS 10.15 or later.
-- Xcode with command-line tools.
-- CocoaPods (`sudo gem install cocoapods`) for the plugin pods.
+> Tempo's numbers are Tempo's own measurement. Apple's Screen Time data is
+> private to the system, and Tempo has no access to it.
 
 ---
 
-## Permissions
+## Platform support
 
-**Neither platform asks for anything for what Tempo measures**, and Tempo says
-so rather than implying it has more access than it does.
+| | Windows | macOS |
+|---|---|---|
+| **Version** | Windows 10 or 11 | macOS 10.15 or later |
+| **Foreground app** | Win32 `GetForegroundWindow` → process → executable, with the executable's own file description as the name | `NSWorkspace.frontmostApplication` |
+| **Idle time** | `GetLastInputInfo` | `CGEventSource.secondsSinceLastEventType` |
+| **Permission prompt** | None — nothing here needs elevation | None — no Accessibility or Screen Recording, because no window contents are read |
+| **Window chrome** | Tempo draws its own title bar and caption buttons | Native traffic lights, hidden title bar |
+| **Tray / menu bar** | Tray icon with a live tooltip and menu | Menu-bar item with a template icon |
+| **Start at login** | Run key, via the system's own mechanism | Login item |
 
-- **Windows** — the foreground window, its process and the executable's own
-  description are all readable without elevation or a prompt.
-- **macOS** — `NSWorkspace` publishes the frontmost application and
-  `CGEventSource` the idle timer. Neither needs Accessibility or Screen
-  Recording, because neither reads window contents.
-- **Apple's own Screen Time data is private to the system.** Tempo has no
-  access to it. What you see is Tempo's own measurement.
-
-Settings shows the real permission state as the platform reports it, rather
+Settings reports the real permission state as the platform gives it, rather
 than assuming.
 
 ---
 
-## Getting started
+## Install and run
+
+**Requirements**
+
+- Flutter (stable) with desktop support enabled — developed against Flutter
+  3.44, Dart SDK `^3.12.2`.
+- **Windows:** Visual Studio 2022 with the *Desktop development with C++*
+  workload.
+- **macOS:** Xcode with command-line tools, and CocoaPods
+  (`sudo gem install cocoapods`).
 
 ```bash
-git clone <your-repository> tempo
+git clone https://github.com/<you>/tempo.git
 cd tempo
 flutter pub get
-```
 
-Confirm desktop support is on:
-
-```bash
-flutter config --enable-windows-desktop   # on Windows
-flutter config --enable-macos-desktop     # on macOS
+# make sure desktop support is on
+flutter config --enable-windows-desktop   # Windows
+flutter config --enable-macos-desktop     # macOS
 flutter devices
 ```
-
----
-
-## Running
 
 ```bash
 flutter run -d windows
 flutter run -d macos
+
+flutter analyze          # the project's only verification step
 ```
 
-The first launch shows the welcome screen explaining what is measured; nothing
-is recorded until you answer it.
+Debug builds start with **preview data** on, so the interface can be judged
+before any real history exists. A badge in the title bar says so, shared
+reports are stamped, and a release build cannot turn it on at all.
 
-Debug builds start with **preview data** on so the interface can be judged
-before any real history exists — see [Preview data](#preview-data).
-
-Static analysis:
-
-```bash
-flutter analyze
-```
+> **Building on Windows?** Quit Tempo first — including from the tray, since
+> closing the window leaves it measuring. A running `Tempo.exe` is locked, and
+> the install step of the build will fail with `MSB3073`.
 
 ---
 
-## Building a release
-
-**Windows**
+## Build a release
 
 ```bash
+# Windows  → build\windows\x64\runner\Release\  (ship the whole folder)
 flutter build windows --release
-```
 
-Output: `build\windows\x64\runner\Release\Tempo.exe` with its `data\` folder
-beside it. Ship the whole `Release` folder.
-
-**macOS**
-
-```bash
+# macOS    → build/macos/Build/Products/Release/Tempo.app
 flutter build macos --release
 ```
-
-Output: `build/macos/Build/Products/Release/Tempo.app`.
 
 **Installers**
 
 ```bash
-# Windows: a plain installer (Inno Setup 6)
-flutter build windows --release
-iscc packaging\windows\tempo.iss
-
-# Windows: an MSIX for the Microsoft Store or sideloading
-dart run msix:create
-
-# macOS: build, sign, DMG, notarise and staple in one go
-./packaging/macos/build_release.sh
+iscc packaging\windows\tempo.iss    # Windows installer (Inno Setup 6)
+dart run msix:create                # MSIX for the Store or sideloading
+./packaging/macos/build_release.sh  # macOS: build, sign, DMG, notarise, staple
 ```
 
-`packaging/macos/build_release.sh` takes its identity from the environment
+The macOS script takes its identity from the environment
 (`TEMPO_SIGN_IDENTITY`, `TEMPO_NOTARY_PROFILE`), so nothing secret lives in the
 repository; without them it still produces an unsigned DMG. The MSIX identity
 lives in `msix_config` in `pubspec.yaml` — set `publisher` to your certificate
 subject before signing.
 
-Before distributing:
+Before distributing: set your own `PRODUCT_BUNDLE_IDENTIFIER` in
+`macos/Runner/Configs/AppInfo.xcconfig` (currently `com.tempo.desktop`), bump
+`version:` in `pubspec.yaml`, and keep `AppInfo.version` in
+`lib/core/constants/app_info.dart` in step — that is what the About screen
+shows.
 
-- Set your own bundle identifier in `macos/Runner/Configs/AppInfo.xcconfig`
-  (`PRODUCT_BUNDLE_IDENTIFIER`, currently `com.tempo.desktop`) and sign the app
-  with your team.
-- The app is sandboxed. `macos/Runner/*.entitlements` already grant
-  `files.downloads.read-write`, which is what saving reports and exports needs.
-- Bump `version:` in `pubspec.yaml`; `AppInfo.version` in
-  `lib/core/constants/app_info.dart` is what the About section shows.
+**Icons.** Every icon is generated from one master,
+`assets/branding/app_icon_source.png`: the Windows `.ico` (nine sizes), the
+tray icon (the mark alone, so it still reads at 16px), the macOS icon set, the
+MSIX logo, and the 512px tile the first run shows. Regenerate them together if
+the artwork changes.
+
+---
+
+## Keyboard
+
+| Shortcut | Does |
+|---|---|
+| `Ctrl` + `1` … `9` | Jump straight to a section |
+| `Ctrl` + `B` | Fold the sidebar into its icon rail |
+| `Ctrl` + `,` | Open Settings |
+
+On macOS, `Cmd` does the same as `Ctrl`.
+
+---
+
+## Where your data lives
+
+One SQLite file in the platform's application-support folder — Settings shows
+the exact path:
+
+```
+Windows   %APPDATA%\<company>\tempo\tempo.db
+macOS     ~/Library/Application Support/<bundle id>/tempo.db
+```
+
+WAL journaling, so the engine's small, frequent writes never block the screens
+reading alongside them.
+
+| Table | Holds |
+|---|---|
+| `usage_sessions` | Every measured stretch: application id and name, start, end, duration, local day, platform. Indexed by day and by application. |
+| `daily_summaries` | One row per day: active seconds, idle seconds, session count, longest session, per-hour minutes. |
+| `application_summaries` | One row per application per day. |
+| `settings` | Preferences, stored beside the history rather than in a second place. |
+
+Summaries are always **rebuilt from the sessions of the day they belong to**,
+so they can never drift from the record they came from. Days with nothing
+stored come back as empty days rather than missing ones, which is why the
+charts keep their rhythm across quiet stretches.
+
+Settings can export everything as CSV or JSON, delete a range of days, or
+delete the lot.
 
 ---
 
@@ -231,274 +257,97 @@ Before distributing:
 
 ```
 lib/
-  app/                     window setup, MaterialApp, theming entry
-  core/
-    constants/             product facts
-    layout/                desktop breakpoints, scroll behaviour
-    motion/                durations, curves, entrances, reduced-motion gate
-    platform/              which desktop this is
-    theme/                 colours, typography, metrics, heat scale, palette
-    utilities/             date maths, formatting
-  data/
-    analytics/             repositories and providers
-    database/              SQLite: schema, usage DAO, settings DAO
-  domain/
-    analytics/             models and pure aggregation
-    tracking/              sessions, tracking status, the engine
-  features/
-    applications/ dashboard/ insights/ month/ navigation/ onboarding/
-    settings/ sharing/ shell/ today/ week/ year/
-  platform/
-    desktop/               tray, window behaviour
-    notifications/         desktop notifications
-    startup/               launch at login
-    usage_tracking/        the platform contract and its two implementations
-  shared/widgets/          glass components, charts, stats, states
+├── app/            application root, window setup
+├── core/           design tokens: colour, type, spacing, radius, motion, layout
+├── data/           SQLite database, DAOs, analytics repositories, providers
+├── domain/         models and the tracking service — no Flutter imports
+├── features/       one folder per screen (home, today, applications, week,
+│                   month, year, insights, about, settings, onboarding, shell)
+├── platform/       per-platform tracking, tray, notifications, start-at-login
+└── shared/         the reusable widget library: glass surfaces, charts, stats
 ```
 
-Principles the code sticks to:
-
-- **One design system.** Every colour, radius, duration and shadow comes from
-  `core/theme` and `core/motion`; no screen invents its own.
-- **Screens never touch storage.** They read `AnalyticsRepository`, so the same
-  interface serves the database, the preview generator, and the failure case.
-- **Aggregation is pure.** `UsageAggregate` and the summary models are plain
-  Dart with no I/O, so they behave the same wherever the days came from.
-- **Platform code is isolated.** `UsageTrackingPlatform` is the only thing that
-  knows Win32 or AppKit exists.
-- **State is Riverpod.** Controllers hold state, providers compose it, and
-  `usageRevisionProvider` is the single signal that stored usage changed.
+- **Flutter** with **Riverpod** for state; every screen reads providers rather
+  than reaching for data itself.
+- **One design system.** Colours, typography, spacing, radii, shadows, glass,
+  buttons, cards, icons, charts and motion all live in `core/` and `shared/`,
+  so no screen invents its own style. Both themes are built from the same
+  tokens and lerp between them, which is why switching appearance crossfades
+  the whole product instead of snapping.
+- **Hand-drawn iconography and charts.** No icon font and no chart library:
+  every glyph, ring, bar, heatmap and grid is a `CustomPainter`.
+- **Motion with a purpose.** Entrances stagger, pages crossfade, the sidebar
+  selection glides, numbers count, cards catch a slow diagonal sheen under the
+  pointer — and every duration routes through one helper, so the system
+  "reduce motion" setting makes the app still rather than fast.
 
 ---
 
 ## How tracking works
 
-```
-Timer (5s)
-   ↓
-UsageTrackingPlatform.activeApplication()   ← Win32 / NSWorkspace
-   ↓
-UsageTrackingService                        ← sessions, idle, sleep, midnight
-   ↓
-UsageDao.saveSession()                      ← SQLite, day rebuilt from sessions
-   ↓
-usageRevisionProvider                       ← every screen re-reads
-```
+A single engine samples on a timer while the app is open:
 
-The rule underneath all of it: **Tempo only records time it actually watched.**
+1. Ask the platform for the frontmost application.
+2. Ask the platform how long the machine has been untouched.
+3. If the application changed, close the open session and start a new one.
+4. If the idle timeout (default 5 minutes, configurable) has passed, close the
+   open session and count the time as idle instead.
+5. Write closed sessions down, then rebuild that day's summaries from its
+   sessions.
 
-- **Sampling.** Every five seconds; the open session is *updated in place*
-  about once a minute, so a two-hour stretch is one row rather than a hundred,
-  and a crash costs at most a minute.
-- **Grouping.** By executable name on Windows, bundle identifier on macOS. The
-  display name is the executable's own file description, so you see "Google
-  Chrome", not "chrome.exe".
-- **Idle.** When input stops for longer than the timeout (1, 5, 10, 15 minutes,
-  or never), the session is closed *at the moment input stopped*, not when the
-  timeout expired. Idle is recorded against the day and belongs to no
-  application.
-- **Sleep and clock changes.** A stopwatch runs beside the wall clock. It
-  cannot be set by hand and does not run while the machine sleeps, so when the
-  two disagree Tempo knows it was not watching: the session closes at the last
-  observed moment and the gap counts as nothing. This covers sleep, suspension,
-  network clock corrections, manual changes, daylight saving and time-zone
-  moves.
-- **Lock and wake.** macOS announces sleeping, waking and screen locking, and
-  measurement stops and starts at that moment. Windows publishes nothing Tempo
-  can hear from Dart, so its lock and sign-in screens are simply not treated as
-  applications.
-- **Midnight.** Sessions never cross a day boundary, so a day's totals are
-  always whole.
-- **Pausing** is a stored preference: it survives a restart, and the sidebar
-  pill, the tray menu and Settings all write the same one.
+Whatever is open is always written down before Tempo quits, so closing the app
+— or the machine sleeping — never loses the stretch in progress.
 
 ---
 
-## The database
+## Sharing and exporting
 
-One SQLite file, opened before the first frame, in the platform's
-application-support folder (Settings shows the path). WAL journaling, so the
-engine's small writes never block the screens reading.
+- **Insights** can turn any span into a shareable card (image) or a plain-text
+  report, and shows you exactly what it says before anything leaves the app.
+  Application names can be left out.
+- **Settings → Your data** exports the raw history as CSV or JSON.
 
-| Table | Holds |
-|---|---|
-| `usage_sessions` | Every measured stretch: application id and name, start, end, duration, local day, platform. Indexed by day and by application. |
-| `daily_summaries` | One row per day: active seconds, idle seconds, session count, longest session, and the day's per-hour minutes. |
-| `application_summaries` | One row per application per day. |
-| `settings` | Preferences, stored beside the history rather than in a second place. |
-
-Summaries are always **rebuilt from the sessions** of the day they belong to,
-so they can never drift from the record they came from. Days with nothing
-stored are returned as empty days rather than missing ones, which is why charts
-keep their rhythm across quiet stretches.
-
----
-
-## The year grid
-
-The signature screen. Every day of the selected year is one rounded square,
-laid out in Monday-first week columns, shaded on a four-step blue-to-violet
-scale against the busiest day of that year.
-
-- The whole grid is **painted as a single layer**, so 365 or 366 cells cost one
-  repaint rather than several hundred widgets.
-- Leap years need no special case: the grid draws whatever days the calendar
-  returns, and the first column's offset comes from 1 January's weekday. 2024
-  and 2028 get 366 squares and the correct starting row automatically.
-- Hovering resolves from the pointer and raises a card with the date, screen
-  time, top application and session count. Clicking opens that day in full
-  underneath.
-- Year navigation offers the first recorded year through this one; a year with
-  nothing in it says so rather than showing an empty grid.
-- The insights below it are computed from the stored days: hours in the year,
-  most-used application, busiest month, change in daily average against last
-  year, longest session and its date, heaviest and lightest days, heaviest
-  weekday, and days used out of 365 or 366. Anything that cannot be worked out
-  is left out rather than invented.
-
----
-
-## Sharing a report
-
-Insights → **Share report** (also in Settings) opens a flow that shows exactly
-what would leave the machine before anything does:
-
-1. The **card** as an image — the totals, the trend and your top applications,
-   always drawn in the midnight identity at a fixed size.
-2. The **text** as it will read, which you can select and edit after copying.
-3. **Application names** can be left out, giving totals only.
-4. Four actions: copy the text, save the text, save the image (PNG, rendered at
-   three times its logical size), or **Share to WhatsApp** — which opens
-   WhatsApp with the message prefilled through `wa.me`. Tempo never sends
-   anything; you choose the chat and press send.
-
-Saved files land in your Downloads folder.
-
----
-
-## Exporting your data
-
-Settings → Your data → **CSV** or **JSON**. Both cover everything stored.
-
-CSV columns:
-
-```
-date,active_seconds,idle_seconds,sessions,longest_session_seconds,
-application,application_id,application_seconds
-```
-
-JSON carries the same, plus each day's per-hour minutes.
-
-Files are written to Downloads as `tempo-usage-YYYY-MM-DD.csv` (or `.json`).
-Exports made while preview data is on are named `tempo-preview-…` so they can
-never be mistaken for measurements.
-
----
-
-## Looking after your data
-
-Settings → **Looking after it**:
-
-- **Keep history for** — Forever (the default), 1 year, 6 months or 3 months.
-  Older days are removed the next time Tempo starts.
-- **Back up** — writes a complete copy of the database to Downloads using
-  SQLite's own `VACUUM INTO`, so the copy is consistent even though the engine
-  may be mid-write.
-- **Restore from an export** — reads a Tempo JSON export back in, session by
-  session. Importing the same file twice changes nothing: a session is the same
-  session if it is the same application starting at the same moment.
-- **Tidy the database** — rewrites the file compactly, reclaiming space left by
-  anything deleted.
-
-Settings → **Diagnostics** asks the app whether its own record makes sense: no
-session crossing midnight, none overlapping another, every day's totals
-matching the sessions behind them, and the file itself sound. The report can be
-copied, and errors are written to a rolling log beside the database
-(`tempo.log`), which the same panel can open.
-
-## Preview data
-
-Debug builds start with sample activity so the interface can be designed and
-reviewed before any history exists.
-
-- It is **deterministic** — the same day always looks the same.
-- While it is on, the title bar shows a **Preview data** badge and shared cards
-  are stamped `PREVIEW DATA`.
-- A release build cannot turn it on: the controller refuses outside debug mode.
-- Turn it off in Settings → Developer to see your own measurements.
-
----
-
-## Known limitations
-
-- **Windows sleep is inferred, not announced.** Windows publishes no power
-  event Tempo can receive from Dart, so sleep is detected by the stopwatch
-  disagreeing with the wall clock. The result is correct; it is simply noticed
-  at the next sample rather than at the instant.
-- **macOS screen-lock notifications may be restricted** under the sandbox on
-  some versions. If they do not arrive, idle detection and the drift guard
-  still cover it.
-- **Application icons are stand-ins.** Each application is shown as its initial
-  on a tinted tile; extracting real icons from executables and bundles is not
-  done yet.
-- **CSV exports carry daily roll-ups only.** The JSON export carries the
-  sessions themselves, which is what makes it restorable; CSV stays a
-  spreadsheet-friendly summary.
-- **Retention is applied at startup**, not continuously, so a window left open
-  for weeks keeps what it has until the next launch.
-- **No automated tests.** See [Project rules](#project-rules).
-- **Linux** builds will run, but nothing is measured: the platform layer
-  reports itself unsupported and the interface says so.
+Both are things you do deliberately. Tempo never sends anything by itself.
 
 ---
 
 ## Troubleshooting
 
-**"Tempo could not open its usage database."**
-The file could not be opened — a full disk, a read-only folder, or a corrupted
-database. The app still runs. Quit, check the path shown in Settings → Your
-data, and restart. Deleting that file loses your history but always fixes it.
+**The window opens dark and empty.** Make sure you are running a build of the
+current source; an old build can be left behind if a previous `flutter build`
+failed at the install step (see the `MSB3073` note above).
 
-**The tracking pill says "Not available here."**
-Either the platform is unsupported (Linux) or the database could not be opened.
-Both are reported honestly rather than shown as an empty week.
+**Nothing is being measured.** Check the tray pill on the sidebar: it says
+*Tracking*, *Paused* or *Unavailable*, and Settings gives the reason. Tracking
+stays off until the first run has been answered.
 
-**Nothing is being recorded.**
-Check Settings → Tracking: the status must not be paused, and preview data must
-be off if you expect your own numbers. Tracking is a stored preference, so a
-pause made earlier is still in effect after a restart.
+**The build fails with `MSB3073` / `INSTALL.vcxproj`.** Tempo is still running.
+Quit it from the tray, or `Get-Process Tempo | Stop-Process -Force`.
 
-**Notifications never appear (Windows).**
-Toast notifications require a Start-menu shortcut, which the app creates on
-first run. If notifications are blocked for Tempo in Windows settings, no
-notification will be shown.
-
-**Closing the window does not quit the app.**
-That is the default: Tempo keeps measuring from the tray. Use the tray menu's
-**Quit Tempo**, or turn off Settings → General → Keep running in the
-background.
-
-**Nothing shows up for a past year.**
-The year picker only offers years with recorded data, and a year with nothing
-in it says so.
+**The window is bigger than the screen.** It shouldn't be — Tempo clamps its
+opening size to the display it lands on. If a saved position leaves it awkward,
+maximise once and it settles.
 
 ---
 
-## Project rules
+## Project files
 
-This repository is built under two rules from its owner, and they explain what
-you will not find here:
+| File | What it is |
+|---|---|
+| `DESIGN.md` | The design direction: style, palette, motion, screens, design system. |
+| `RULES.md` | The working agreement this project was built under. |
+| `PROGRESS.md` | A phase-by-phase record of what was built, and where each phase stopped. |
 
-- **No tests, ever.** No test files, no test runner. `test/` was removed.
-  Verification is `flutter analyze` only, which passes with no issues.
-- **The app is never run or built as part of development.** Every change is
-  written and analysed statically. The native paths — Win32 FFI, the Swift
-  channel, the tray, startup and notifications — have been analysed, not
-  exercised.
+---
 
-`DESIGN.md` holds the design direction, `RULES.md` the working agreement, and
-`PROGRESS.md` a phase-by-phase record of what was built and where each phase
-stopped.
-=======
-Tempo is a screen-time app for macOS and Windows. It quietly measures where your hours actually go — active time, apps, sessions — and lays them out in a calm midnight-blue interface: daily rings, weekly bars, a yearly heatmap, honest insights. Everything stays on your machine.
->>>>>>> b23811f7a1952605469de2dc6dd9878952b6009d
+## Developer
+
+**Rahoz Osman** — designed and built Tempo.
+📧 [hozahoza2001@gmail.com](mailto:hozahoza2001@gmail.com)
+
+The same information lives in the app, under **About**.
+
+<div align="center">
+<br />
+<sub>Tempo measures your time, not you.</sub>
+</div>

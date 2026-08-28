@@ -43,3 +43,47 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Windows desktop
+**/windows/flutter/ephemeral/
+**/windows/flutter/generated_plugin_registrant.*
+*.msix
+*.appx
+*.appxbundle
+*.pdb
+*.ilk
+
+# macOS desktop
+**/macos/Flutter/ephemeral/
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/Pods/
+**/Podfile.lock
+**/xcuserdata/
+**/DerivedData/
+**/*.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+.symlinks/
+*.dmg
+
+# Linux desktop
+**/linux/flutter/ephemeral/
+
+# Flutter tooling leftovers
+.flutter-plugins
+**/generated_plugin_registrant.dart
+
+# Packaging output
+/packaging/**/Output/
+/packaging/**/output/
+/dist/
+/release/
+
+# Operating-system and cloud-sync noise
+Thumbs.db
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*~
+
+# Local scratch that should never be shared
+*.local
+/scratch/
