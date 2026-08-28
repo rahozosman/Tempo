@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_info.dart';
 import '../../../core/motion/tempo_motion.dart';
+import '../../../core/motion/tempo_spring.dart';
 import '../../../core/theme/tempo_colors.dart';
 import '../../../core/theme/tempo_metrics.dart';
 import '../../../core/theme/tempo_theme.dart';
@@ -40,15 +41,18 @@ class TempoSidebar extends ConsumerWidget {
       curve: TempoCurve.emphasized,
       builder: (BuildContext context, double t, Widget? child) {
         final double width = lerpDouble(
-          TempoSizes.sidebarRail,
-          TempoSizes.sidebarExpanded,
+          context.sized(TempoSizes.sidebarRail),
+          context.sized(TempoSizes.sidebarExpanded),
           t,
         )!;
         return SizedBox(
           width: width,
           child: ClipRect(
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
+              filter: ImageFilter.blur(
+                sigmaX: context.tempo.blur(26),
+                sigmaY: context.tempo.blur(26),
+              ),
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   border: Border(right: BorderSide(color: c.border)),
@@ -252,7 +256,8 @@ class _NavList extends ConsumerStatefulWidget {
 }
 
 class _NavListState extends ConsumerState<_NavList> {
-  static const double _step = TempoSizes.navItem + TempoSizes.navGap;
+  static double _stepOf(BuildContext context) =>
+      context.sized(TempoSizes.navItem) + TempoSizes.navGap;
 
   int? _hovered;
 
@@ -275,20 +280,25 @@ class _NavListState extends ConsumerState<_NavList> {
   @override
   Widget build(BuildContext context) {
     final int selected = widget.selected;
-    final Duration glide = TempoMotion.of(context, TempoDuration.slow);
     final bool showing = _hovered != null && _hovered != selected;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: TempoSpace.xxs),
       child: Stack(
         children: <Widget>[
-          AnimatedPositioned(
-            duration: glide,
-            curve: TempoCurve.emphasized,
-            top: selected * _step,
-            left: TempoSpace.xs,
-            right: TempoSpace.xs,
-            height: TempoSizes.navItem,
+          // A spring rather than a curve: chase the pill down the list and it
+          // keeps the speed it already had instead of restarting each time.
+          SpringValue(
+            value: selected * _stepOf(context),
+            spring: TempoSpring.snap,
+            builder: (BuildContext context, double top, Widget? child) =>
+                Positioned(
+                  top: top,
+                  left: TempoSpace.xs,
+                  right: TempoSpace.xs,
+                  height: context.sized(TempoSizes.navItem),
+                  child: child!,
+                ),
             child: const _SelectionPill(),
           ),
           // A second, quieter pill that follows the pointer between rows, the
@@ -296,10 +306,10 @@ class _NavListState extends ConsumerState<_NavList> {
           AnimatedPositioned(
             duration: TempoMotion.of(context, TempoDuration.base),
             curve: TempoCurve.gentle,
-            top: _anchor * _step,
+            top: _anchor * _stepOf(context),
             left: TempoSpace.xs,
             right: TempoSpace.xs,
-            height: TempoSizes.navItem,
+            height: context.sized(TempoSizes.navItem),
             child: IgnorePointer(
               child: AnimatedOpacity(
                 opacity: showing ? 1 : 0,
@@ -437,7 +447,9 @@ class _Footer extends StatelessWidget {
                   // The full width the expanded sidebar has to give. The line
                   // is laid out at that width whatever the rail is doing, so
                   // the fold clips it rather than reflowing it.
-                  maxWidth: TempoSizes.sidebarExpanded - TempoSpace.sm * 2,
+                  maxWidth:
+                      context.sized(TempoSizes.sidebarExpanded) -
+                      TempoSpace.sm * 2,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[

@@ -20,14 +20,28 @@ class TempoApp extends ConsumerWidget {
     return MaterialApp(
       title: AppInfo.name,
       debugShowCheckedModeBanner: false,
-      theme: TempoThemeData.light(accentIntensity: appearance.accentIntensity),
+      theme: TempoThemeData.light(
+        accentIntensity: appearance.accentIntensity,
+        scale: appearance.elementScale,
+        glass: appearance.glass,
+      ),
       darkTheme: TempoThemeData.dark(
         accentIntensity: appearance.accentIntensity,
+        scale: appearance.elementScale,
+        glass: appearance.glass,
       ),
       themeMode: appearance.themeMode,
       themeAnimationDuration: TempoDuration.slow,
       themeAnimationCurve: TempoCurve.gentle,
       scrollBehavior: const TempoScrollBehavior(),
+      // Every piece of text follows the element size. Icons, buttons and marks
+      // read the same number from the theme, so they grow with it.
+      builder: (BuildContext context, Widget? child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(appearance.elementScale),
+        ),
+        child: child ?? const SizedBox.shrink(),
+      ),
       home: const AppShell(),
     );
   }

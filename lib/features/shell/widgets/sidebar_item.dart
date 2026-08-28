@@ -43,7 +43,7 @@ class SidebarItem extends StatelessWidget {
         // The hover pill is drawn by the sidebar so it can glide between rows;
         // this widget only answers with its own ink.
         return SizedBox(
-          height: TempoSizes.navItem,
+          height: context.sized(TempoSizes.navItem),
           child: Row(
             children: <Widget>[
               SizedBox(width: lerpDouble(14, 10, expansion)),

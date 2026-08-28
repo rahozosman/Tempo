@@ -150,9 +150,6 @@ class _GlassCardState extends State<GlassCard>
     final Color fill = _hovered
         ? Color.lerp(c.glassFill, c.glassFillStrong, weight)!
         : c.glassFill;
-    final Color border = _hovered
-        ? Color.lerp(c.border, c.borderStrong, weight)!
-        : c.border;
 
     // Under the pointer the card drops its shadow entirely and answers with
     // light alone: the travelling edge is the whole answer, with nothing cast
@@ -185,7 +182,9 @@ class _GlassCardState extends State<GlassCard>
         height: widget.height,
         shadows: const <BoxShadow>[],
         fill: fill,
-        borderColor: border,
+        // No hairline: the coloured edge alone draws the outline, and comes
+        // forward under the pointer.
+        edge: _hovered ? 0.95 : 0.5,
         overlay: Stack(
           fit: StackFit.expand,
           children: <Widget>[

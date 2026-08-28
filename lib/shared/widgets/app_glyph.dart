@@ -24,6 +24,7 @@ class AppGlyph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TempoColors c = context.colors;
+    final double size = context.sized(this.size);
     final Color tone = TempoPalette.toneFor(c, id);
     final String initial = name.trim().isEmpty
         ? '?'

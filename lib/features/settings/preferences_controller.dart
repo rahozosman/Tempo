@@ -20,6 +20,7 @@ class TempoPreferences {
     this.notificationsEnabled = true,
     this.retentionDays = 0,
     this.weeklyDigest = true,
+    this.windowBlur = true,
   });
 
   /// The screen-time goal shown on Today.
@@ -51,6 +52,10 @@ class TempoPreferences {
   /// Whether Tempo sends one summary of the week just gone.
   final bool weeklyDigest;
 
+  /// Whether the window itself blurs the desktop behind it, where the system
+  /// can do that.
+  final bool windowBlur;
+
   TempoPreferences copyWith({
     Duration? dailyGoal,
     bool? includeApplicationNames,
@@ -60,6 +65,7 @@ class TempoPreferences {
     bool? notificationsEnabled,
     int? retentionDays,
     bool? weeklyDigest,
+    bool? windowBlur,
   }) => TempoPreferences(
     dailyGoal: dailyGoal ?? this.dailyGoal,
     includeApplicationNames:
@@ -71,6 +77,7 @@ class TempoPreferences {
     notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
     retentionDays: retentionDays ?? this.retentionDays,
     weeklyDigest: weeklyDigest ?? this.weeklyDigest,
+    windowBlur: windowBlur ?? this.windowBlur,
   );
 }
 
@@ -96,6 +103,7 @@ class PreferencesController extends Notifier<TempoPreferences> {
       retentionDays:
           int.tryParse(stored[SettingsKeys.retentionDays] ?? '') ?? 0,
       weeklyDigest: stored[SettingsKeys.weeklyDigest] != 'false',
+      windowBlur: stored[SettingsKeys.windowBlur] != 'false',
     );
   }
 
@@ -145,6 +153,11 @@ class PreferencesController extends Notifier<TempoPreferences> {
   void setWeeklyDigest({required bool enabled}) {
     state = state.copyWith(weeklyDigest: enabled);
     _remember(SettingsKeys.weeklyDigest, '$enabled');
+  }
+
+  void setWindowBlur({required bool enabled}) {
+    state = state.copyWith(windowBlur: enabled);
+    _remember(SettingsKeys.windowBlur, '$enabled');
   }
 
   void _remember(String key, String value) {

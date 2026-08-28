@@ -27,7 +27,7 @@ class CalendarHeatmap extends StatelessWidget {
     this.selected,
     this.onSelect,
     this.spacing = 7,
-    this.maxCellSize = 54,
+    required this.cellSize,
   });
 
   /// The first of the month.
@@ -42,7 +42,25 @@ class CalendarHeatmap extends StatelessWidget {
   final DateTime? selected;
   final ValueChanged<DaySummary>? onSelect;
   final double spacing;
-  final double maxCellSize;
+
+  /// The side of one day's square. Decided by whoever lays the calendar out,
+  /// so the grid never has to measure itself and can sit in a row that is
+  /// asked for its height.
+  final double cellSize;
+
+  /// The largest a square is worth drawing.
+  static const double maxCellSize = 54;
+
+  /// The square that fits [innerWidth], capped at [maxCellSize] and scaled
+  /// with the element size.
+  static double cellFor(
+    BuildContext context,
+    double innerWidth, {
+    double spacing = 7,
+  }) {
+    final double fit = (innerWidth - spacing * 6) / 7;
+    return math.max(22.0, math.min(context.sized(maxCellSize), fit));
+  }
 
   /// 1 January 2024 was a Monday, so weekday names can be read off it.
   static final DateTime _referenceMonday = DateTime(2024, 1);
@@ -53,78 +71,68 @@ class CalendarHeatmap extends StatelessWidget {
     final DateTime today = TempoDates.startOfDay(DateTime.now());
     final int blanks = month.weekday - DateTime.monday;
     final int rows = ((blanks + days.length) / 7).ceil();
+    final double cell = cellSize;
+    final double width = cell * 7 + spacing * 6;
 
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final double cell = math.min(
-          maxCellSize,
-          (constraints.maxWidth - spacing * 6) / 7,
-        );
-        final double width = cell * 7 + spacing * 6;
-
-        return Align(
-          child: SizedBox(
-            width: width,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
+    return Align(
+      child: SizedBox(
+        width: width,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Row(
               children: <Widget>[
-                Row(
+                for (int i = 0; i < 7; i++) ...<Widget>[
+                  if (i > 0) SizedBox(width: spacing),
+                  SizedBox(
+                    width: cell,
+                    child: Center(
+                      child: Text(
+                        TempoFormat.weekdayShort(
+                          DateTime(
+                            _referenceMonday.year,
+                            _referenceMonday.month,
+                            _referenceMonday.day + i,
+                          ),
+                        ).substring(0, 2).toUpperCase(),
+                        style: context.typo.labelSmall?.copyWith(
+                          fontSize: 10,
+                          letterSpacing: 1.2,
+                          color: i >= 5 ? c.textTertiary : c.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            SizedBox(height: spacing + 3),
+            for (int row = 0; row < rows; row++)
+              Padding(
+                padding: EdgeInsets.only(bottom: row == rows - 1 ? 0 : spacing),
+                child: Row(
                   children: <Widget>[
-                    for (int i = 0; i < 7; i++) ...<Widget>[
-                      if (i > 0) SizedBox(width: spacing),
+                    for (int column = 0; column < 7; column++) ...<Widget>[
+                      if (column > 0) SizedBox(width: spacing),
                       SizedBox(
                         width: cell,
-                        child: Center(
-                          child: Text(
-                            TempoFormat.weekdayShort(
-                              DateTime(
-                                _referenceMonday.year,
-                                _referenceMonday.month,
-                                _referenceMonday.day + i,
-                              ),
-                            ).substring(0, 2).toUpperCase(),
-                            style: context.typo.labelSmall?.copyWith(
-                              fontSize: 10,
-                              letterSpacing: 1.2,
-                              color: i >= 5 ? c.textTertiary : c.textSecondary,
-                            ),
-                          ),
+                        height: cell,
+                        child: _cellFor(
+                          row: row,
+                          column: column,
+                          blanks: blanks,
+                          today: today,
+                          size: cell,
                         ),
                       ),
                     ],
                   ],
                 ),
-                SizedBox(height: spacing + 3),
-                for (int row = 0; row < rows; row++)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      bottom: row == rows - 1 ? 0 : spacing,
-                    ),
-                    child: Row(
-                      children: <Widget>[
-                        for (int column = 0; column < 7; column++) ...<Widget>[
-                          if (column > 0) SizedBox(width: spacing),
-                          SizedBox(
-                            width: cell,
-                            height: cell,
-                            child: _cellFor(
-                              row: row,
-                              column: column,
-                              blanks: blanks,
-                              today: today,
-                              size: cell,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
+              ),
+          ],
+        ),
+      ),
     );
   }
 

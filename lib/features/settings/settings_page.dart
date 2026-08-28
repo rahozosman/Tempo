@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../app/window_effects.dart';
 import '../../core/constants/app_info.dart';
 import '../../core/platform/tempo_platform.dart';
 import '../../core/theme/tempo_colors.dart';
@@ -238,6 +239,35 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ),
               ),
               _SettingRow(
+                title: 'Element size',
+                description:
+                    'Makes text, icons, buttons and marks larger or smaller. '
+                    'The layout stays where it is: pages get longer, not '
+                    'narrower. Cmd/Ctrl + and - change it from anywhere; '
+                    'Cmd/Ctrl 0 returns to 100%.',
+                trailing: _ScaleControl(
+                  value: appearance.elementScale,
+                  onChanged: appearanceController.setElementScale,
+                  onStepDown: appearanceController.smallerElements,
+                  onStepUp: appearanceController.largerElements,
+                ),
+              ),
+              _SettingRow(
+                title: 'Glass',
+                description:
+                    'How frosted the surfaces are. Lower is clearer, with more '
+                    'of the room showing through; higher is milkier and more '
+                    'solid. Blur follows it.',
+                trailing: _SliderControl(
+                  value: appearance.glass,
+                  min: AppearanceState.minGlass,
+                  max: AppearanceState.maxGlass,
+                  divisions: 12,
+                  readout: '${(appearance.glass * 100).round()}%',
+                  onChanged: appearanceController.setGlass,
+                ),
+              ),
+              _SettingRow(
                 title: 'Accent intensity',
                 description: 'How strongly the blues and violets glow.',
                 trailing: _SliderControl(
@@ -247,6 +277,34 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   divisions: 10,
                   readout: '${(appearance.accentIntensity * 100).round()}%',
                   onChanged: appearanceController.setAccentIntensity,
+                ),
+              ),
+              _SettingRow(
+                title: 'Window blur',
+                description: TempoWindowEffect.isSupported
+                    ? 'Lets the desktop show through the window, using the '
+                          'material the system provides. Turning it off keeps '
+                          'the window solid.'
+                    : 'This system cannot blur behind a window, so Tempo keeps '
+                          'its own background instead.',
+                trailing: SizedBox(
+                  width: 200,
+                  child: Opacity(
+                    opacity: TempoWindowEffect.isSupported ? 1 : 0.4,
+                    child: TempoSegmented<bool>(
+                      value:
+                          preferences.windowBlur &&
+                          TempoWindowEffect.isSupported,
+                      onChanged: TempoWindowEffect.isSupported
+                          ? (bool value) => preferencesController
+                                .setWindowBlur(enabled: value)
+                          : (bool _) {},
+                      segments: const <TempoSegment<bool>>[
+                        TempoSegment<bool>(value: false, label: 'Off'),
+                        TempoSegment<bool>(value: true, label: 'On'),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               _SettingRow(
@@ -774,6 +832,95 @@ class _LeadingGlyph extends StatelessWidget {
 
 /// A slider with a live readout and a dot that glows exactly as the rest of
 /// the app will.
+/// The element-size line.
+///
+/// Nothing is resized while the thumb is being dragged: the readout follows
+/// the drag, and the size is applied once on release, so the control never
+/// moves under the cursor. The end buttons move one step at a time.
+class _ScaleControl extends StatefulWidget {
+  const _ScaleControl({
+    required this.value,
+    required this.onChanged,
+    required this.onStepDown,
+    required this.onStepUp,
+  });
+
+  final double value;
+  final ValueChanged<double> onChanged;
+  final VoidCallback onStepDown;
+  final VoidCallback onStepUp;
+
+  @override
+  State<_ScaleControl> createState() => _ScaleControlState();
+}
+
+class _ScaleControlState extends State<_ScaleControl> {
+  double? _dragging;
+
+  @override
+  Widget build(BuildContext context) {
+    final TempoColors c = context.colors;
+    final double shown = _dragging ?? widget.value;
+    final int divisions =
+        ((AppearanceState.maxScale - AppearanceState.minScale) /
+                AppearanceState.scaleStep)
+            .round();
+
+    return SizedBox(
+      width: 300,
+      child: Row(
+        children: <Widget>[
+          GlassIconButton(
+            glyph: TempoGlyph.minimize,
+            tooltip: 'Smaller',
+            size: 28,
+            onPressed: widget.value > AppearanceState.minScale + 0.001
+                ? widget.onStepDown
+                : null,
+          ),
+          const SizedBox(width: TempoSpace.xs),
+          Expanded(
+            child: Slider(
+              value: shown.clamp(
+                AppearanceState.minScale,
+                AppearanceState.maxScale,
+              ),
+              min: AppearanceState.minScale,
+              max: AppearanceState.maxScale,
+              divisions: divisions,
+              onChangeStart: (double value) =>
+                  setState(() => _dragging = value),
+              onChanged: (double value) => setState(() => _dragging = value),
+              onChangeEnd: (double value) {
+                setState(() => _dragging = null);
+                widget.onChanged(value);
+              },
+            ),
+          ),
+          const SizedBox(width: TempoSpace.xs),
+          GlassIconButton(
+            glyph: TempoGlyph.plus,
+            tooltip: 'Larger',
+            size: 28,
+            onPressed: widget.value < AppearanceState.maxScale - 0.001
+                ? widget.onStepUp
+                : null,
+          ),
+          const SizedBox(width: TempoSpace.xs),
+          SizedBox(
+            width: 44,
+            child: Text(
+              '${(shown * 100).round()}%',
+              textAlign: TextAlign.right,
+              style: context.typo.labelMedium?.copyWith(color: c.textPrimary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SliderControl extends StatelessWidget {
   const _SliderControl({
     required this.value,

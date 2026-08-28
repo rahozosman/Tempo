@@ -47,6 +47,9 @@ class SettingsKeys {
 
   static const String themeMode = 'appearance.theme_mode';
   static const String accentIntensity = 'appearance.accent_intensity';
+  static const String windowBlur = 'appearance.window_blur';
+  static const String elementScale = 'appearance.element_scale';
+  static const String glass = 'appearance.glass';
   static const String dailyGoalMinutes = 'screen_time.daily_goal_minutes';
   static const String idleTimeoutMinutes = 'tracking.idle_timeout_minutes';
   static const String trackingEnabled = 'tracking.enabled';

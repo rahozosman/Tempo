@@ -39,7 +39,10 @@ class ApplicationDetailView extends ConsumerWidget {
     void back() => ref.read(selectedApplicationProvider.notifier).clear();
 
     return PageScaffold(
-      leading: AppGlyph(id: selection.id, name: selection.name, size: 48),
+      leading: Hero(
+        tag: 'application-${selection.id}',
+        child: AppGlyph(id: selection.id, name: selection.name, size: 48),
+      ),
       title: selection.name,
       subtitle: selection.id,
       trailing: Row(

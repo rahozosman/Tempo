@@ -2,8 +2,7 @@ import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 
 /// Desktop scrolling for Tempo: trackpad, mouse wheel and drag all work, the
-/// Material overscroll glow is removed, and lists settle with a soft rubber
-/// band instead of stopping dead.
+/// Material overscroll glow is removed, and lists stop cleanly at their ends.
 class TempoScrollBehavior extends MaterialScrollBehavior {
   const TempoScrollBehavior();
 
@@ -23,6 +22,8 @@ class TempoScrollBehavior extends MaterialScrollBehavior {
   ) => child;
 
   @override
+  // No rubber band: with wheel input the overscroll and snap-back read as the
+  // page being pulled, so the list simply stops where its content does.
   ScrollPhysics getScrollPhysics(BuildContext context) =>
-      const BouncingScrollPhysics(parent: RangeMaintainingScrollPhysics());
+      const ClampingScrollPhysics(parent: RangeMaintainingScrollPhysics());
 }

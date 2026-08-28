@@ -66,7 +66,12 @@ class ApplicationCard extends StatelessWidget {
                   ),
                 ),
               ),
-              AppGlyph(id: usage.id, name: usage.name, size: 46),
+              // The mark travels into the detail header when this card is
+              // opened, so the two screens read as one movement.
+              Hero(
+                tag: 'application-${usage.id}',
+                child: AppGlyph(id: usage.id, name: usage.name, size: 46),
+              ),
               const SizedBox(width: TempoSpace.md),
               Expanded(
                 child: Column(

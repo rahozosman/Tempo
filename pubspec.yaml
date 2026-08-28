@@ -45,6 +45,7 @@ dependencies:
   launch_at_startup: ^0.5.0
   local_notifier: ^0.1.6
   file_selector: ^1.0.3
+  flutter_acrylic: ^1.1.4
 
 dev_dependencies:
   flutter_test:

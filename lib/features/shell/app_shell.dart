@@ -11,11 +11,16 @@ import '../applications/applications_page.dart';
 import '../dashboard/home_page.dart';
 import '../insights/insights_page.dart';
 import '../month/month_page.dart';
+import '../../app/window_effects.dart';
+import '../../app/window_setup.dart';
+import '../../app/window_material.dart';
 import '../../platform/desktop/desktop_integration.dart';
 import '../../platform/usage_tracking/usage_tracking_providers.dart';
 import '../onboarding/onboarding_controller.dart';
 import '../onboarding/welcome_overlay.dart';
+import '../launch/launch_screen.dart';
 import '../navigation/nav_destination.dart';
+import '../settings/appearance_controller.dart';
 import '../navigation/navigation_controller.dart';
 import '../settings/settings_page.dart';
 import '../today/today_page.dart';
@@ -85,7 +90,42 @@ class AppShell extends ConsumerWidget {
       LogicalKeyboardKey.keyB,
       () => ref.read(sidebarCollapsedProvider.notifier).toggle(),
     );
+
+    // Element size, the way every desktop app does it.
+    final AppearanceController appearance = ref.read(
+      appearanceProvider.notifier,
+    );
+    for (final LogicalKeyboardKey key in <LogicalKeyboardKey>[
+      LogicalKeyboardKey.equal,
+      LogicalKeyboardKey.add,
+      LogicalKeyboardKey.numpadAdd,
+    ]) {
+      bind(key, appearance.largerElements);
+    }
+    for (final LogicalKeyboardKey key in <LogicalKeyboardKey>[
+      LogicalKeyboardKey.minus,
+      LogicalKeyboardKey.numpadSubtract,
+    ]) {
+      bind(key, appearance.smallerElements);
+    }
+    bind(LogicalKeyboardKey.digit0, appearance.resetElementScale);
+    bind(LogicalKeyboardKey.numpad0, appearance.resetElementScale);
     return bindings;
+  }
+
+  /// Feeds the room behind the pages how far the page in front has scrolled.
+  ///
+  /// It only ever writes to a notifier the background listens to, so scrolling
+  /// never rebuilds the shell.
+  static bool _onPageScroll(ScrollNotification notification) {
+    if (notification.depth != 0 || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+    ambientScrollDepth.value = (notification.metrics.pixels / 900).clamp(
+      0.0,
+      1.0,
+    );
+    return false;
   }
 
   @override
@@ -98,9 +138,18 @@ class AppShell extends ConsumerWidget {
     final TempoSection section = kDestinations[destination].section;
     final bool foldedByUser = ref.watch(sidebarCollapsedProvider);
 
-    return Scaffold(
-      backgroundColor: context.colors.backdrop,
-      body: CallbackShortcuts(
+    return ValueListenableBuilder<bool>(
+      valueListenable: windowEffectActive,
+      builder: (BuildContext context, bool translucent, Widget? body) =>
+          Scaffold(
+            // Transparent once the window has a material of its own: anything
+            // opaque here would paint over the very thing being blurred.
+            backgroundColor: translucent
+                ? Colors.transparent
+                : context.colors.backdrop,
+            body: body,
+          ),
+      child: CallbackShortcuts(
         bindings: _shortcuts(ref),
         child: Focus(
           autofocus: true,
@@ -121,14 +170,27 @@ class AppShell extends ConsumerWidget {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
-                        TempoSidebar(collapsed: collapsed),
+                        // The sidebar slides in from the left as the launch
+                        // mark flies to its seat at the top of it.
+                        LaunchArrival(
+                          slide: const Offset(-28, 0),
+                          child: TempoSidebar(collapsed: collapsed),
+                        ),
                         Expanded(
-                          child: FocusTraversalGroup(
-                            child: TempoPageSwitcher(
-                              order: destination,
-                              child: KeyedSubtree(
-                                key: ValueKey<TempoSection>(section),
-                                child: _pageFor(section),
+                          // The page rises into place a beat behind the
+                          // sidebar.
+                          child: LaunchArrival(
+                            slide: const Offset(0, 22),
+                            child: FocusTraversalGroup(
+                              child: NotificationListener<ScrollNotification>(
+                                onNotification: _onPageScroll,
+                                child: TempoPageSwitcher(
+                                  order: destination,
+                                  child: KeyedSubtree(
+                                    key: ValueKey<TempoSection>(section),
+                                    child: _pageFor(section),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -151,6 +213,17 @@ class AppShell extends ConsumerWidget {
               // Draws nothing: the tray, the close behaviour and the
               // notifications live here so they last as long as the app does.
               const DesktopIntegration(),
+              const WindowMaterialSync(),
+              // The opening, above everything, until it has handed over.
+              // A window opened at sign-in into the tray skips it: nobody is
+              // watching.
+              if (!tempoLaunchedHidden)
+                ValueListenableBuilder<bool>(
+                  valueListenable: launchDone,
+                  builder: (BuildContext context, bool done, Widget? _) => done
+                      ? const SizedBox.shrink()
+                      : const Positioned.fill(child: LaunchScreen()),
+                ),
             ],
           ),
         ),

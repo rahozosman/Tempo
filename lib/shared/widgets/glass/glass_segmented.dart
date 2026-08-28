@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/motion/tempo_animations.dart';
 import '../../../core/motion/tempo_motion.dart';
+import '../../../core/motion/tempo_spring.dart';
 import '../../../core/theme/tempo_colors.dart';
 import '../../../core/theme/tempo_metrics.dart';
 import '../../../core/theme/tempo_theme.dart';
@@ -33,6 +34,7 @@ class TempoSegmented<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TempoColors c = context.colors;
+    final double height = context.sized(this.height);
     final int count = segments.length;
     final int index = segments.indexWhere(
       (TempoSegment<T> segment) => segment.value == value,
@@ -52,10 +54,11 @@ class TempoSegmented<T> extends StatelessWidget {
       child: Stack(
         children: <Widget>[
           if (index >= 0)
-            AnimatedAlign(
-              alignment: Alignment(alignmentX, 0),
-              duration: TempoMotion.of(context, TempoDuration.slow),
-              curve: TempoCurve.emphasized,
+            SpringValue(
+              value: alignmentX,
+              spring: TempoSpring.snap,
+              builder: (BuildContext context, double x, Widget? child) =>
+                  Align(alignment: Alignment(x, 0), child: child),
               child: FractionallySizedBox(
                 widthFactor: 1 / count,
                 heightFactor: 1,

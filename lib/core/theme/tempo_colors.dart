@@ -127,6 +127,42 @@ class TempoColors {
     scrim: Color(0xCCF4F5FC),
   );
 
+  /// The same identity with its glass re-mixed.
+  ///
+  /// [factor] scales how much of the surface the glass paints: below one it is
+  /// clearer and the room shows through more, above one it is milkier and
+  /// more opaque. The hairline borders are left alone, so cards keep their
+  /// edges however faint their fill becomes.
+  TempoColors withGlass(double factor) {
+    if ((factor - 1).abs() < 0.001) {
+      return this;
+    }
+    Color mix(Color color) =>
+        color.withValues(alpha: (color.a * factor).clamp(0.0, 1.0));
+    return TempoColors(
+      backdrop: backdrop,
+      backdropEdge: backdropEdge,
+      surface: surface,
+      surfaceElevated: surfaceElevated,
+      glassFill: mix(glassFill),
+      glassFillStrong: mix(glassFillStrong),
+      glassSheen: mix(glassSheen),
+      border: border,
+      borderStrong: borderStrong,
+      accent: accent,
+      accentAlt: accentAlt,
+      accentSoft: accentSoft,
+      textPrimary: textPrimary,
+      textSecondary: textSecondary,
+      textTertiary: textTertiary,
+      positive: positive,
+      warning: warning,
+      danger: danger,
+      shadow: shadow,
+      scrim: scrim,
+    );
+  }
+
   static TempoColors lerp(TempoColors a, TempoColors b, double t) {
     if (identical(a, b)) {
       return a;

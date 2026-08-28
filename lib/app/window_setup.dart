@@ -14,7 +14,11 @@ import '../core/theme/tempo_metrics.dart';
 /// Tempo hides the system title bar and draws its own, so the window reads as
 /// one continuous glass surface. macOS keeps its native window buttons; on
 /// Windows the caption buttons come drawn by the Tempo title bar.
+/// True when the window was opened straight into the tray at sign-in.
+bool tempoLaunchedHidden = false;
+
 Future<void> configureWindow({bool startHidden = false}) async {
+  tempoLaunchedHidden = startHidden;
   if (!TempoPlatform.isDesktop) {
     return;
   }

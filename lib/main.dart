@@ -2,17 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/tempo_app.dart';
+import 'app/window_effects.dart';
 import 'app/window_setup.dart';
 import 'data/analytics/analytics_providers.dart';
 import 'core/diagnostics/tempo_log.dart';
 import 'data/database/settings_dao.dart';
 import 'data/database/tempo_database.dart';
+import 'features/launch/launch_screen.dart';
 import 'platform/startup/startup_controller.dart';
 
 Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
   await TempoLog.open();
-  await configureWindow(startHidden: arguments.contains(hiddenLaunchFlag));
+  // Prepared before the window is shown, so it never appears opaque and then
+  // turns translucent a frame later.
+  await TempoWindowEffect.initialise();
+  final bool hidden = arguments.contains(hiddenLaunchFlag);
+  await configureWindow(startHidden: hidden);
+  if (hidden) {
+    launchDone.value = true;
+    launchReveal.value = 1;
+  }
   configureStartup();
 
   // The database is opened before the first frame so every screen can read it

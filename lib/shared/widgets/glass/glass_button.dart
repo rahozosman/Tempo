@@ -42,7 +42,7 @@ class GlassButton extends StatelessWidget {
     final TempoColors c = context.colors;
     final TempoTheme theme = context.tempo;
     final bool enabled = onPressed != null;
-    final double height = compact ? 34 : 42;
+    final double height = context.sized(compact ? 34 : 42);
 
     return FocusRing(
       radius: height / 2,
@@ -151,6 +151,7 @@ class GlassIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TempoColors c = context.colors;
+    final double size = context.sized(this.size);
     return Tooltip(
       message: tooltip,
       child: FocusRing(

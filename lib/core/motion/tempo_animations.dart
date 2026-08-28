@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
 import 'tempo_motion.dart';
+import 'tempo_spring.dart';
 
 /// Fade and rise. The single entrance used by headers, cards and rows.
 ///
@@ -38,12 +40,18 @@ class _TempoEntranceState extends State<TempoEntrance>
     parent: _controller,
     curve: TempoCurve.entrance,
   );
+
+  /// How far below the fold a widget may be and still count as arriving.
+  static const double _threshold = 0.94;
+
   Timer? _timer;
+  ScrollPosition? _position;
   bool _started = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _listenToScroll();
     if (_started) {
       return;
     }
@@ -52,21 +60,72 @@ class _TempoEntranceState extends State<TempoEntrance>
       _controller.value = 1;
       return;
     }
-    final Duration wait = widget.delay + TempoDuration.stagger * widget.index;
+    // Anything already on screen arrives on the page's own rhythm; anything
+    // below the fold waits until it is scrolled to, so a long page reveals
+    // itself as it is read rather than animating where nobody can see it.
+    if (_isVisible()) {
+      _begin(widget.delay + TempoDuration.stagger * widget.index);
+    }
+  }
+
+  void _listenToScroll() {
+    final ScrollPosition? position = Scrollable.maybeOf(context)?.position;
+    if (identical(position, _position)) {
+      return;
+    }
+    _position?.removeListener(_onScroll);
+    _position = position;
+    _position?.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_controller.isAnimating || _controller.value > 0) {
+      return;
+    }
+    if (_isVisible()) {
+      _begin(Duration.zero);
+    }
+  }
+
+  /// True when this widget's top edge is inside — or nearly inside — the
+  /// window. Off-screen widgets are left alone.
+  bool _isVisible() {
+    final RenderObject? object = context.findRenderObject();
+    if (object is! RenderBox || !object.attached) {
+      // No box yet: assume it is on screen rather than never animating.
+      return true;
+    }
+    // localToGlobal answers in the window's own space, so the window is what
+    // it must be measured against. MediaQuery would be the *scaled* canvas
+    // once the display size is anything but 100%, and the two would disagree —
+    // leaving everything below the fold invisible for ever.
+    final double top = object.localToGlobal(Offset.zero).dy;
+    final ui.FlutterView view = View.of(context);
+    final double height = view.physicalSize.height / view.devicePixelRatio;
+    return height <= 0 || top < height * _threshold;
+  }
+
+  void _begin(Duration wait) {
+    if (_controller.value > 0 || _controller.isAnimating) {
+      return;
+    }
+    _position?.removeListener(_onScroll);
     if (wait == Duration.zero) {
       _controller.forward();
-    } else {
-      _timer = Timer(wait, () {
-        if (mounted) {
-          _controller.forward();
-        }
-      });
+      return;
     }
+    _timer?.cancel();
+    _timer = Timer(wait, () {
+      if (mounted) {
+        _controller.forward();
+      }
+    });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _position?.removeListener(_onScroll);
     _animation.dispose();
     _controller.dispose();
     super.dispose();
@@ -179,10 +238,11 @@ class _PressableScaleState extends State<PressableScale> {
       onTapUp: enabled ? (_) => _set(false) : null,
       onTapCancel: enabled ? () => _set(false) : null,
       onTap: widget.onTap,
-      child: AnimatedScale(
-        scale: _pressed ? widget.scale : 1,
-        duration: TempoMotion.of(context, TempoDuration.instant),
-        curve: TempoCurve.gentle,
+      child: SpringValue(
+        value: _pressed ? widget.scale : 1,
+        spring: TempoSpring.touch,
+        builder: (BuildContext context, double scale, Widget? child) =>
+            Transform.scale(scale: scale, child: child),
         child: widget.child,
       ),
     );

@@ -12,6 +12,7 @@ One phase per turn. Verification is `flutter analyze` only.
 | 3 | Applications list + application detail: range switching, ranking cards, share of period, trend, per-application history chart and facts | **done** |
 | 4 | Week + Month: period navigation, seven-day chart with measure switching and last-week ghosts, week-over-week comparison, month calendar heatmap with day drill-in | **done** |
 | 5 | Year: 365/366-day activity grid with hover detail and day drill-in, year navigation across recorded years, monthly comparison, computed yearly insights | **done** |
+| 19 | Feel: window vibrancy, spring motion, a shared-element flight, scroll-driven depth | **done** |
 | 18 | Day timeline, weekly digest, application limits, focus blocks | **done** |
 | 17 | Distribution: Inno Setup installer, MSIX configuration, macOS sign/DMG/notarise script, releases link | **done** |
 | 16 | Looking after the data: retention, backup, restore from an export, optimise, sessions in the JSON export | **done** |
@@ -493,6 +494,159 @@ Four features, chosen over real application icons, which stays skipped.
 - One notification when the week turns: the total, the daily average, what led,
   and how it compares with the week before. The week it covered is stored, so a
   restart cannot make it repeat. Its own switch in Settings.
+
+## Phase 19 — delivered
+
+The four things that separated Tempo from a native-feeling Mac app.
+
+**The window's own material**
+- `NSVisualEffectView` on macOS and Mica on Windows 11, through
+  `flutter_acrylic`. Tempo paints glass; only the system can blur what is
+  *behind* the window, and that is the difference between sitting on the
+  desktop and sitting in it.
+- Everything degrades quietly: Windows 10 and anything that throws keeps the
+  solid window. The room softens to a wash (82% dark, 90% light) only while a
+  material is actually in place, and the shell drops its own opaque background
+  at the same moment. A switch in Appearance turns it off.
+
+**Springs**
+- `TempoSpring` + `SpringValue`: a value driven by a `SpringSimulation` that
+  re-aims mid-flight, carrying the velocity it already had. Chase the sidebar
+  pill down the list and it never restarts.
+- The sidebar selection, the segmented indicators and every press now run on
+  springs rather than fixed curves. Reduced motion still means no motion.
+
+**A shared-element flight**
+- Applications now has a navigator of its own with a `HeroController`, so the
+  mark on a card *flies* into the detail header instead of one screen
+  dissolving into another. The selection provider still drives it, so opening
+  an application from Home or from a day panel arrives the same way.
+
+**Scroll-driven depth**
+- `TempoEntrance` now waits: anything below the fold holds still until it is
+  scrolled to, so a long page reveals itself as it is read.
+- The room drifts against the page — four lights, each at its own rate — fed by
+  a notifier the shell writes to, so scrolling never rebuilds anything above
+  the background.
+
+## Element size
+
+Settings > Appearance > **Element size**, 85% to 140% in 5% steps, with
+Cmd/Ctrl `+`, `-` and `0` from anywhere.
+
+This is the second attempt. The first scaled the whole canvas the way a browser
+zooms a page; the layout re-flowed with it, which read as the window changing
+rather than the things inside it, and it was taken out. This one does what
+macOS "Larger Text" does: the window, the columns and the layout stay exactly
+where they are, and the **elements** grow.
+
+- Text follows a `TextScaler` set once in `MaterialApp.builder`.
+- Everything with a fixed size reads `context.sized(...)` from the theme:
+  every glyph, the application marks and the Tempo mark, button heights,
+  segmented controls, the statistic card tiles, the sidebar rows and widths,
+  and the calendar cells. Charts keep their heights; their labels scale.
+- Spacing tokens are untouched, so pages get longer, not narrower.
+- The slider applies on release, so the control never moves under the cursor.
+
+## One Tempo at a time
+
+Every launch started a fresh process, and each one measured on its own with
+its own tray icon. `windows/runner/main.cpp` now claims a named mutex
+(one per sign-in session) before the Flutter engine starts. A second launch
+finds the running window by class and title, skipping its own, restores it
+from the tray or from minimised, brings it to the front and exits. The system
+releases the mutex when the process ends, however it ends, so a crash never
+locks the app out. macOS needs nothing: a bundle opened again is activated by
+Launch Services rather than started twice.
+
+## Glass
+
+Settings > Appearance > **Glass**, 40% to 160%: how frosted the surfaces are.
+`TempoColors.withGlass` re-mixes the three glass slots (fill, strong fill,
+sheen) by one factor and leaves the hairline borders alone, so cards keep
+their edges however faint their fill becomes; the theme carries the same
+factor and every backdrop blur — cards, panels, dialogs, the sidebar — reads
+its sigma through `context.tempo.blur`. Because the colours are mixed once at
+theme build, every `GlassSurface` follows without knowing the setting exists.
+
+Found while adding it: the element-size factor had never reached the
+`TempoTheme` extension — an earlier non-asserting replace had missed the
+instantiation — so `context.sized` was always ×1 and only text had been
+scaling. Fixed in the same pass; icons, buttons, marks, rows and calendar
+cells now follow the setting as intended.
+
+## Cards in a row
+
+Two things made cards in the same row look different sizes.
+
+- **Inside the statistic cards.** The grid already stretched every card in a
+  row to one height, but the contents sat wherever they fell: a card with a
+  footer or a two-line caption had its figure high up, while its neighbour's
+  figure sat lower with empty space beneath. `MetricCard` now keeps its label
+  and figure at the top, pins the caption and footer to the bottom edge, and
+  rests every figure on a slot as tall as the largest figure style — so a name
+  set smaller than a number still lands on the same line as the number next
+  to it.
+- **Month.** The calendar and the day panel really were different heights,
+  because the calendar measured itself with a `LayoutBuilder` and a
+  `LayoutBuilder` cannot answer an intrinsic query, which forced the row to be
+  top-aligned. The calendar is now told its cell size by the page, from the
+  width the row actually has, so it needs no `LayoutBuilder` and the row can
+  stretch both cards to one height.
+
+## The living edge
+
+The hairline border that made every card read as a cell in a grid is gone.
+`GlassSurface` now clips and shadows with a **superellipse** — continuous
+corners, the curve easing into the straight edge with no seam — and draws its
+edge as a slow **sweep of the three product colours** turning around the
+outline. The sweep takes its angle from `ambientPhase`, which the room
+publishes from its own 72-second loop, so every card's edge and the lights
+behind it move as one weather. At rest the edge is faint; a hovered card
+brings it forward. The painter repaints from the phase directly, with no
+widget rebuilds, and draws only the stroke, so a screen of cards costs a
+handful of thin arcs a frame. Reduced motion stops the room, and with it the
+edges.
+
+## Smooth wheel scrolling
+
+Flutter's default answer to a mouse wheel on desktop sets the offset at once,
+so each notch landed the page a fixed distance on with nothing in between —
+scrolling read as stepping from section to section. `SmoothScrollController`
+overrides `pointerScroll` on its position to glide to the new offset over
+240 ms, and while a glide is in flight the next notch adds to where it was
+heading rather than to where the page is, so a quick spin builds momentum.
+`PageScaffold` hands it down as the primary controller with desktop platforms
+included, so every page's list picks it up without being told. Drags, trackpad
+panning and the scrollbar are untouched; any of them ends the glide cleanly.
+
+## Free scrolling
+
+Two things made the page feel as though it pulled at itself while scrolling.
+The heading hid itself on the first notch down and came back on the first
+notch up, and every time it did the space above the list changed height and
+the content lurched with it. And the rubber band at either end sprang the
+page back after a wheel spin. The heading now holds still, and the physics
+clamp at the ends: the wheel moves the list, and nothing else moves.
+
+## The opening
+
+A launch that becomes the app rather than a splash that gets replaced. Over
+2.3 seconds, on top of the room that is already drifting: the Tempo mark
+draws itself — the orbit sweeps in, the inner arc follows, the travelling
+point lands and lets go a ring of light — while a soft two-colour halo
+breathes in behind it; the wordmark settles beneath, its letters drawing
+together as they land, with the tagline a beat behind. Then the mark flies
+to its seat at the top of the sidebar along a slightly bowed path, shrinking
+from 104 to 30 on the way, while the veil dissolves, the sidebar slides in
+from the left and the page rises into place — so the logo you watched is the
+one sitting in the corner when the app is ready. The geometry is the sidebar
+mark's exactly, so the flight ends on a match.
+
+`launchReveal` and `launchDone` are the two notifiers the shell reads;
+`LaunchArrival` wraps the sidebar and the page and costs nothing once the
+launch is over. Reduced motion makes it a short fade. A window opened into
+the tray at sign-in skips it entirely: nobody is watching.
 
 ## Stopping point
 

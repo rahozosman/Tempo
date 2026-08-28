@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/tempo_theme.dart';
+
 /// The Tempo glyph set.
 ///
 /// Icons are drawn as vectors on a 24x24 grid rather than pulled from a font,
@@ -28,6 +30,7 @@ enum TempoGlyph {
   info,
   trendUp,
   trendDown,
+  plus,
 }
 
 class TempoIcon extends StatelessWidget {
@@ -50,6 +53,7 @@ class TempoIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color resolved =
         color ?? IconTheme.of(context).color ?? const Color(0xFFFFFFFF);
+    final double size = context.sized(this.size);
     return SizedBox(
       width: size,
       height: size,
@@ -306,6 +310,10 @@ class _GlyphPainter extends CustomPainter {
             ..lineTo(19.8, 12.2),
           stroke,
         );
+        break;
+      case TempoGlyph.plus:
+        _line(canvas, stroke, 12.0, 6.6, 12.0, 17.4);
+        _line(canvas, stroke, 6.6, 12.0, 17.4, 12.0);
         break;
       case TempoGlyph.trendDown:
         canvas.drawPath(

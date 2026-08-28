@@ -14,6 +14,8 @@ class TempoTheme extends ThemeExtension<TempoTheme> {
     required this.colors,
     required this.accentIntensity,
     required this.isDark,
+    this.scale = 1,
+    this.glass = 1,
   });
 
   final TempoColors colors;
@@ -22,6 +24,22 @@ class TempoTheme extends ThemeExtension<TempoTheme> {
   final double accentIntensity;
 
   final bool isDark;
+
+  /// How large the elements are drawn: text, icons, buttons, marks, rows.
+  /// 1.0 is the design size. The window, the layout and the columns do not
+  /// change with it — only the things inside them, so a larger setting makes
+  /// pages longer, not narrower.
+  final double scale;
+
+  /// [value] at the current element size.
+  double sized(double value) => value * scale;
+
+  /// How much glass the surfaces carry, 0.4 (clear) to 1.6 (frosted). The
+  /// colours already have it mixed in; this is what blur reads from.
+  final double glass;
+
+  /// A backdrop blur sigma at the current glass setting.
+  double blur(double sigma) => sigma * glass;
 
   LinearGradient get accentGradient => TempoGradients.accent(colors);
   LinearGradient get accentWideGradient => TempoGradients.accentWide(colors);
@@ -42,10 +60,14 @@ class TempoTheme extends ThemeExtension<TempoTheme> {
     TempoColors? colors,
     double? accentIntensity,
     bool? isDark,
+    double? scale,
+    double? glass,
   }) => TempoTheme(
     colors: colors ?? this.colors,
     accentIntensity: accentIntensity ?? this.accentIntensity,
     isDark: isDark ?? this.isDark,
+    scale: scale ?? this.scale,
+    glass: glass ?? this.glass,
   );
 
   @override
@@ -59,6 +81,8 @@ class TempoTheme extends ThemeExtension<TempoTheme> {
           lerpDouble(accentIntensity, other.accentIntensity, t) ??
           accentIntensity,
       isDark: t < 0.5 ? isDark : other.isDark,
+      scale: lerpDouble(scale, other.scale, t) ?? scale,
+      glass: lerpDouble(glass, other.glass, t) ?? glass,
     );
   }
 }
@@ -67,16 +91,36 @@ class TempoTheme extends ThemeExtension<TempoTheme> {
 class TempoThemeData {
   const TempoThemeData._();
 
-  static ThemeData dark({double accentIntensity = 1}) =>
-      _build(Brightness.dark, TempoColors.dark, accentIntensity);
+  static ThemeData dark({
+    double accentIntensity = 1,
+    double scale = 1,
+    double glass = 1,
+  }) => _build(
+    Brightness.dark,
+    TempoColors.dark.withGlass(glass),
+    accentIntensity,
+    scale,
+    glass,
+  );
 
-  static ThemeData light({double accentIntensity = 1}) =>
-      _build(Brightness.light, TempoColors.light, accentIntensity);
+  static ThemeData light({
+    double accentIntensity = 1,
+    double scale = 1,
+    double glass = 1,
+  }) => _build(
+    Brightness.light,
+    TempoColors.light.withGlass(glass),
+    accentIntensity,
+    scale,
+    glass,
+  );
 
   static ThemeData _build(
     Brightness brightness,
     TempoColors c,
     double accentIntensity,
+    double scale,
+    double glass,
   ) {
     final bool isDark = brightness == Brightness.dark;
     final ColorScheme scheme = ColorScheme(
@@ -103,7 +147,7 @@ class TempoThemeData {
       highlightColor: Colors.transparent,
       hoverColor: Colors.transparent,
       textTheme: TempoTypography.textTheme(c),
-      iconTheme: IconThemeData(color: c.textSecondary, size: 20),
+      iconTheme: IconThemeData(color: c.textSecondary, size: 20 * scale),
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: c.accent,
         selectionColor: c.accent.withValues(alpha: 0.28),
@@ -173,7 +217,13 @@ class TempoThemeData {
         overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
       ),
       extensions: <ThemeExtension<dynamic>>[
-        TempoTheme(colors: c, accentIntensity: accentIntensity, isDark: isDark),
+        TempoTheme(
+          colors: c,
+          accentIntensity: accentIntensity,
+          isDark: isDark,
+          scale: scale,
+          glass: glass,
+        ),
       ],
     );
   }
@@ -190,6 +240,9 @@ extension TempoThemeAccess on BuildContext {
       );
 
   TempoColors get colors => tempo.colors;
+
+  /// [value] at the current element size.
+  double sized(double value) => tempo.sized(value);
 
   TextTheme get typo => Theme.of(this).textTheme;
 }

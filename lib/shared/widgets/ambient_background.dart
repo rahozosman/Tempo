@@ -2,9 +2,22 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../app/window_effects.dart';
 import '../../core/motion/tempo_motion.dart';
 import '../../core/theme/tempo_colors.dart';
 import '../../core/theme/tempo_theme.dart';
+
+/// How far the page in front has been scrolled, 0 at the top and 1 once it has
+/// travelled far enough for the room behind it to have finished shifting.
+///
+/// Held globally because exactly one room exists, and because it must not
+/// rebuild anything above it to move.
+final ValueNotifier<double> ambientScrollDepth = ValueNotifier<double>(0);
+
+/// Where the room is in its slow loop, 0 to 1. Every glass edge in the app
+/// turns from this same number, which is what makes the cards and the lights
+/// behind them read as one weather rather than many clocks.
+final ValueNotifier<double> ambientPhase = ValueNotifier<double>(0);
 
 /// The room the app lives in.
 ///
@@ -23,7 +36,10 @@ class _AmbientBackgroundState extends State<AmbientBackground>
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: TempoDuration.ambient,
-  );
+  )..addListener(_publish);
+
+  void _publish() => ambientPhase.value = _controller.value;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -38,7 +54,9 @@ class _AmbientBackgroundState extends State<AmbientBackground>
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller
+      ..removeListener(_publish)
+      ..dispose();
     super.dispose();
   }
 
@@ -46,19 +64,31 @@ class _AmbientBackgroundState extends State<AmbientBackground>
   Widget build(BuildContext context) {
     final TempoTheme theme = context.tempo;
     return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (BuildContext context, Widget? child) {
-          return CustomPaint(
-            painter: _AmbientPainter(
-              t: _controller.value,
-              colors: theme.colors,
-              intensity: theme.accentIntensity,
-              isDark: theme.isDark,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: windowEffectActive,
+        builder: (BuildContext context, bool translucent, Widget? _) =>
+            AnimatedBuilder(
+              animation: Listenable.merge(<Listenable>[
+                _controller,
+                ambientScrollDepth,
+              ]),
+              builder: (BuildContext context, Widget? child) {
+                return CustomPaint(
+                  painter: _AmbientPainter(
+                    t: _controller.value,
+                    colors: theme.colors,
+                    intensity: theme.accentIntensity,
+                    isDark: theme.isDark,
+                    // With a system material behind the window, the room is
+                    // painted as a wash rather than a wall, so the desktop
+                    // reads through it without the text losing its footing.
+                    opacity: translucent ? (theme.isDark ? 0.82 : 0.90) : 1,
+                    depth: ambientScrollDepth.value,
+                  ),
+                  child: const SizedBox.expand(),
+                );
+              },
             ),
-            child: const SizedBox.expand(),
-          );
-        },
       ),
     );
   }
@@ -70,12 +100,22 @@ class _AmbientPainter extends CustomPainter {
     required this.colors,
     required this.intensity,
     required this.isDark,
+    this.opacity = 1,
+    this.depth = 0,
   });
 
   final double t;
   final TempoColors colors;
   final double intensity;
   final bool isDark;
+
+  /// How solid the base wash is. Below one, the window's own material shows
+  /// through it.
+  final double opacity;
+
+  /// How far the page in front has scrolled. The lights drift against it,
+  /// which is what gives the window a sense of depth while reading.
+  final double depth;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -87,19 +127,27 @@ class _AmbientPainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[colors.backdrop, colors.backdropEdge],
+          colors: <Color>[
+            colors.backdrop.withValues(alpha: opacity),
+            colors.backdropEdge.withValues(alpha: opacity),
+          ],
         ).createShader(rect),
     );
 
     final double scale = isDark ? 1.0 : 0.55;
-    _blob(canvas, size, const Alignment(-0.78, -0.88), 0.62, colors.accent,
-        0.20 * scale, 0.00);
-    _blob(canvas, size, const Alignment(0.86, -0.62), 0.54, colors.accentAlt,
-        0.18 * scale, 0.33);
-    _blob(canvas, size, const Alignment(0.18, 0.96), 0.70, colors.accentSoft,
-        0.13 * scale, 0.61);
-    _blob(canvas, size, const Alignment(-0.92, 0.74), 0.46, colors.accent,
-        0.10 * scale, 0.84);
+    // Each light rises against the page by a different amount — near ones
+    // more, far ones less — which is what reads as depth rather than a slide.
+    Alignment shifted(Alignment at, double factor) =>
+        Alignment(at.x, at.y - depth * factor);
+
+    _blob(canvas, size, shifted(const Alignment(-0.78, -0.88), 0.10), 0.62,
+        colors.accent, 0.20 * scale, 0.00);
+    _blob(canvas, size, shifted(const Alignment(0.86, -0.62), 0.16), 0.54,
+        colors.accentAlt, 0.18 * scale, 0.33);
+    _blob(canvas, size, shifted(const Alignment(0.18, 0.96), 0.28), 0.70,
+        colors.accentSoft, 0.13 * scale, 0.61);
+    _blob(canvas, size, shifted(const Alignment(-0.92, 0.74), 0.22), 0.46,
+        colors.accent, 0.10 * scale, 0.84);
 
     canvas.drawRect(
       rect,
@@ -152,5 +200,7 @@ class _AmbientPainter extends CustomPainter {
       oldDelegate.t != t ||
       oldDelegate.intensity != intensity ||
       oldDelegate.isDark != isDark ||
+      oldDelegate.opacity != opacity ||
+      oldDelegate.depth != depth ||
       oldDelegate.colors.backdrop != colors.backdrop;
 }

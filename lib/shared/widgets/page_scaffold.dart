@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show ScrollDirection;
 
+import '../../core/layout/smooth_scroll.dart';
 import '../../core/layout/tempo_breakpoints.dart';
 import '../../core/motion/tempo_animations.dart';
 import '../../core/motion/tempo_motion.dart';
@@ -44,7 +44,7 @@ class _PageScaffoldState extends State<PageScaffold>
   /// page rather than leaving a gap behind.
   late final AnimationController _reveal = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 280),
+    duration: const Duration(milliseconds: 220),
     value: 1,
   );
   late final CurvedAnimation _eased = CurvedAnimation(
@@ -54,13 +54,20 @@ class _PageScaffoldState extends State<PageScaffold>
 
   bool _shown = true;
 
+
   /// How strongly the top edge of the content is faded: 0 while the page is
   /// at rest, 1 once it has been scrolled and there is content passing under
   /// the heading. Kept out of [setState] so scrolling only repaints the mask.
   final ValueNotifier<double> _topFade = ValueNotifier<double>(0);
 
+  /// Every page's main list scrolls through this, so a mouse wheel glides
+  /// rather than stepping. Handed down as the primary controller, which any
+  /// vertical list under the page picks up without being told.
+  final SmoothScrollController _scroll = SmoothScrollController();
+
   @override
   void dispose() {
+    _scroll.dispose();
     _topFade.dispose();
     _eased.dispose();
     _reveal.dispose();
@@ -88,21 +95,11 @@ class _PageScaffoldState extends State<PageScaffold>
       return false;
     }
     _topFade.value = (notification.metrics.pixels / 24).clamp(0.0, 1.0);
-    // At the top of a page the heading always belongs on screen.
-    if (notification.metrics.pixels <= 8) {
-      _set(shown: true);
-      return false;
-    }
-    if (notification is UserScrollNotification) {
-      switch (notification.direction) {
-        case ScrollDirection.reverse:
-          _set(shown: false);
-        case ScrollDirection.forward:
-          _set(shown: true);
-        case ScrollDirection.idle:
-          break;
-      }
-    }
+    // The heading holds still. Hiding it as the page moved meant the space
+    // above the list shrank and grew with every change of direction, and the
+    // content lurched with it — which read as the page pulling at itself.
+    // Scrolling now moves the list and nothing else.
+    _set(shown: true);
     return false;
   }
 
@@ -160,28 +157,39 @@ class _PageScaffoldState extends State<PageScaffold>
                     padding: EdgeInsets.fromLTRB(gutter, 0, gutter, gutter),
                     child: TempoEntrance(
                       index: 1,
-                      child: NotificationListener<ScrollNotification>(
-                        onNotification: _onScroll,
-                        // Waiting, failed and settled states are different
-                        // widgets: crossfade between them rather than swapping
-                        // one for the other in a single frame.
-                        child: _EdgeFade(
-                          topFade: _topFade,
-                          child: AnimatedSwitcher(
-                            duration: TempoMotion.of(
-                              context,
-                              TempoDuration.base,
+                      child: PrimaryScrollController(
+                        controller: _scroll,
+                        // Desktop lists do not take the primary controller
+                        // by default; here they must, or the wheel keeps
+                        // its steps.
+                        automaticallyInheritForPlatforms: TargetPlatform.values
+                            .toSet(),
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: _onScroll,
+                          // Waiting, failed and settled states are different
+                          // widgets: crossfade between them rather than swapping
+                          // one for the other in a single frame.
+                          child: _EdgeFade(
+                            topFade: _topFade,
+                            child: AnimatedSwitcher(
+                              duration: TempoMotion.of(
+                                context,
+                                TempoDuration.base,
+                              ),
+                              switchInCurve: TempoCurve.entrance,
+                              switchOutCurve: TempoCurve.exit,
+                              layoutBuilder:
+                                  (Widget? current, List<Widget> previous) =>
+                                      Stack(
+                                        fit: StackFit.passthrough,
+                                        alignment: Alignment.topCenter,
+                                        children: <Widget>[
+                                          ...previous,
+                                          ?current,
+                                        ],
+                                      ),
+                              child: widget.child,
                             ),
-                            switchInCurve: TempoCurve.entrance,
-                            switchOutCurve: TempoCurve.exit,
-                            layoutBuilder:
-                                (Widget? current, List<Widget> previous) =>
-                                    Stack(
-                                      fit: StackFit.passthrough,
-                                      alignment: Alignment.topCenter,
-                                      children: <Widget>[...previous, ?current],
-                                    ),
-                            child: widget.child,
                           ),
                         ),
                       ),

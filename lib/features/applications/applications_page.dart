@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/motion/tempo_animations.dart';
+import '../../core/motion/tempo_motion.dart';
 import '../../core/theme/tempo_metrics.dart';
 import '../../core/theme/tempo_theme.dart';
 import '../../core/theme/tempo_typography.dart';
@@ -22,36 +22,124 @@ import 'widgets/application_card.dart';
 
 /// Applications. The ranked list, and the history of whichever application is
 /// open, sharing one destination in the sidebar.
-class ApplicationsPage extends ConsumerWidget {
+///
+/// The two live in a navigator of their own rather than a crossfade, which is
+/// what lets the mark on a card *fly* into the detail header instead of one
+/// screen dissolving into another.
+class ApplicationsPage extends ConsumerStatefulWidget {
   const ApplicationsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final SelectedApp? selected = ref.watch(selectedApplicationProvider);
-    final Widget body = TempoPageSwitcher(
-      child: selected == null
-          ? const _RankedApplications(key: ValueKey<String>('applications'))
-          : ApplicationDetailView(
-              key: ValueKey<String>(selected.id),
-              selection: selected,
-            ),
-    );
+  ConsumerState<ApplicationsPage> createState() => _ApplicationsPageState();
+}
 
-    if (selected == null) {
-      return body;
+class _ApplicationsPageState extends ConsumerState<ApplicationsPage> {
+  final GlobalKey<NavigatorState> _navigator = GlobalKey<NavigatorState>();
+  final HeroController _heroes = HeroController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Arriving with an application already chosen — from Home, from a day
+    // panel — opens straight onto it.
+    final SelectedApp? open = ref.read(selectedApplicationProvider);
+    if (open != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _open(open));
     }
+  }
+
+  void _open(SelectedApp app) {
+    final NavigatorState? navigator = _navigator.currentState;
+    if (navigator == null) {
+      return;
+    }
+    navigator
+      ..popUntil((Route<dynamic> route) => route.isFirst)
+      ..push(_detailRoute(app));
+  }
+
+  Route<void> _detailRoute(SelectedApp app) => PageRouteBuilder<void>(
+    // Long enough for the mark to travel, short enough to feel immediate.
+    transitionDuration: TempoMotion.of(context, TempoDuration.page),
+    reverseTransitionDuration: TempoMotion.of(context, TempoDuration.base),
+    opaque: false,
+    barrierColor: Colors.transparent,
+    pageBuilder:
+        (
+          BuildContext context,
+          Animation<double> animation,
+          Animation<double> secondary,
+        ) => ApplicationDetailView(selection: app),
+    transitionsBuilder:
+        (
+          BuildContext context,
+          Animation<double> animation,
+          Animation<double> secondary,
+          Widget child,
+        ) {
+          final CurvedAnimation curved = CurvedAnimation(
+            parent: animation,
+            curve: TempoCurve.entrance,
+            reverseCurve: TempoCurve.exit,
+          );
+          return FadeTransition(
+            opacity: curved,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.018),
+                end: Offset.zero,
+              ).animate(curved),
+              child: child,
+            ),
+          );
+        },
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<SelectedApp?>(selectedApplicationProvider, (
+      SelectedApp? previous,
+      SelectedApp? next,
+    ) {
+      final NavigatorState? navigator = _navigator.currentState;
+      if (navigator == null) {
+        return;
+      }
+      if (next == null) {
+        navigator.popUntil((Route<dynamic> route) => route.isFirst);
+      } else {
+        _open(next);
+      }
+    });
+
     return CallbackShortcuts(
       bindings: <ShortcutActivator, VoidCallback>{
         const SingleActivator(LogicalKeyboardKey.escape): () =>
             ref.read(selectedApplicationProvider.notifier).clear(),
       },
-      child: Focus(autofocus: true, child: body),
+      child: Focus(
+        autofocus: true,
+        child: Navigator(
+          key: _navigator,
+          observers: <NavigatorObserver>[_heroes],
+          onGenerateRoute: (RouteSettings settings) => PageRouteBuilder<void>(
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+            pageBuilder:
+                (
+                  BuildContext context,
+                  Animation<double> animation,
+                  Animation<double> secondary,
+                ) => const _RankedApplications(),
+          ),
+        ),
+      ),
     );
   }
 }
 
 class _RankedApplications extends ConsumerWidget {
-  const _RankedApplications({super.key});
+  const _RankedApplications();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -131,8 +219,8 @@ class _RankedList extends ConsumerWidget {
                 value: apps.length,
                 style: context.typo.headlineLarge,
               ),
-              caption: 'Averaging ${TempoFormat.hm(overview.averagePerApp)} '
-                  'each',
+              caption:
+                  'Averaging ${TempoFormat.hm(overview.averagePerApp)} each',
             ),
             MetricCard(
               label: 'Most used',

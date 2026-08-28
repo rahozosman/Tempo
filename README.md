@@ -313,6 +313,12 @@ Both are things you do deliberately. Tempo never sends anything by itself.
 
 ## Troubleshooting
 
+**Two Tempo icons in the tray.**
+Two copies of the app were running, each measuring on its own. Tempo now
+allows one copy per sign-in: launching it again wakes the running window and
+exits. Quit both from their tray menus once, and only one will start from then
+on.
+
 **The window opens dark and empty.** Make sure you are running a build of the
 current source; an old build can be left behind if a previous `flutter build`
 failed at the install step (see the `MSB3073` note above).

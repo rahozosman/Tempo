@@ -181,15 +181,27 @@ class _MonthBody extends ConsumerWidget {
           index: 1,
           child: LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
+              final bool wide = constraints.maxWidth >= 960;
+              // The calendar is told its cell size here, from the width this
+              // row actually has, so it never has to measure itself and the
+              // two cards can be stretched to one height.
+              final double cardWidth = wide
+                  ? (constraints.maxWidth - TempoSpace.md) * 5 / 9
+                  : constraints.maxWidth;
+              final double cell = CalendarHeatmap.cellFor(
+                context,
+                cardWidth - TempoSpace.xl * 2 - 2,
+              );
               final Widget calendar = _CalendarCard(
                 summary: summary,
                 selected: selected,
+                cellSize: cell,
               );
               final Widget day = _DayPanel(
                 summary: summary,
                 selected: selected,
               );
-              if (constraints.maxWidth < 960) {
+              if (!wide) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
@@ -199,15 +211,15 @@ class _MonthBody extends ConsumerWidget {
                   ],
                 );
               }
-              // Deliberately not IntrinsicHeight: the calendar measures itself
-              // with a LayoutBuilder, which cannot answer an intrinsic query.
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Expanded(flex: 5, child: calendar),
-                  const SizedBox(width: TempoSpace.md),
-                  Expanded(flex: 4, child: day),
-                ],
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Expanded(flex: 5, child: calendar),
+                    const SizedBox(width: TempoSpace.md),
+                    Expanded(flex: 4, child: day),
+                  ],
+                ),
               );
             },
           ),
@@ -229,10 +241,15 @@ class _MonthBody extends ConsumerWidget {
 
 /// The calendar, and the two days worth naming underneath it.
 class _CalendarCard extends ConsumerWidget {
-  const _CalendarCard({required this.summary, required this.selected});
+  const _CalendarCard({
+    required this.summary,
+    required this.selected,
+    required this.cellSize,
+  });
 
   final MonthSummary summary;
   final DaySummary? selected;
+  final double cellSize;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -275,6 +292,7 @@ class _CalendarCard extends ConsumerWidget {
                 month: summary.month,
                 days: summary.days,
                 peak: summary.peak,
+                cellSize: cellSize,
                 selected: selected?.date,
                 onSelect: (DaySummary day) =>
                     ref.read(selectedDayProvider.notifier).select(day.date),

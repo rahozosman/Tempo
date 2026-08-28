@@ -19,7 +19,7 @@ class TempoMark extends StatelessWidget {
   Widget build(BuildContext context) {
     final TempoColors c = context.colors;
     final Widget mark = CustomPaint(
-      size: Size.square(size),
+      size: Size.square(context.sized(size)),
       painter: _MarkPainter(colors: c),
     );
     if (!glow) {
