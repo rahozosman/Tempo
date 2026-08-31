@@ -2,6 +2,10 @@
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
 
+#include <algorithm>
+#include <string>
+#include <vector>
+
 #include "flutter_window.h"
 #include "utils.h"
 
@@ -14,6 +18,11 @@ namespace {
 constexpr const wchar_t kInstanceMutexName[] = L"Local\\Tempo.SingleInstance";
 constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
 constexpr const wchar_t kWindowTitle[] = L"Tempo";
+
+// Passed by the system when Tempo is opened at sign-in. It must be read here
+// as well as in Dart: the runner is what puts the window on screen, so it is
+// the runner that has to know not to.
+constexpr const char kHiddenLaunchFlag[] = "--hidden";
 
 // Finds the running Tempo's window, skipping any window that belongs to this
 // process. The running copy may be hidden in the tray, so it is searched for
@@ -47,13 +56,23 @@ void ActivateRunningTempo(HWND window) {
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
+  std::vector<std::string> command_line_arguments = GetCommandLineArguments();
+  const bool start_hidden =
+      std::find(command_line_arguments.begin(), command_line_arguments.end(),
+                kHiddenLaunchFlag) != command_line_arguments.end();
+
   // Claimed for the life of the process; released by the system when it ends,
   // however it ends, so a crash never locks the app out.
   HANDLE instance_mutex = ::CreateMutexW(nullptr, TRUE, kInstanceMutexName);
   if (instance_mutex != nullptr && ::GetLastError() == ERROR_ALREADY_EXISTS) {
-    HWND running = FindRunningTempoWindow();
-    if (running != nullptr) {
-      ActivateRunningTempo(running);
+    // A person opening Tempo again is asking to see it. The system opening it
+    // at sign-in, on top of a copy already measuring, is asking for nothing —
+    // that launch leaves without disturbing the window.
+    if (!start_hidden) {
+      HWND running = FindRunningTempoWindow();
+      if (running != nullptr) {
+        ActivateRunningTempo(running);
+      }
     }
     ::CloseHandle(instance_mutex);
     return EXIT_SUCCESS;
@@ -71,12 +90,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   flutter::DartProject project(L"data");
 
-  std::vector<std::string> command_line_arguments =
-      GetCommandLineArguments();
-
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
-  FlutterWindow window(project);
+  FlutterWindow window(project, start_hidden);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
   if (!window.Create(kWindowTitle, origin, size)) {

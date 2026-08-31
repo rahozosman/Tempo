@@ -43,9 +43,13 @@ dependencies:
   win32: ^5.5.4
   tray_manager: ^0.5.0
   launch_at_startup: ^0.5.0
+  # Read-only companion to launch_at_startup: it tells a missing sign-in
+  # entry apart from one switched off in Task Manager.
+  win32_registry: ^2.1.0
   local_notifier: ^0.1.6
   file_selector: ^1.0.3
   flutter_acrylic: ^1.1.4
+  msix: ^3.18.0
 
 dev_dependencies:
   flutter_test:
@@ -58,12 +62,6 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   # Packaging only. Never imported by the app.
-  msix: ^3.16.7
-
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
 flutter:
 
   # The following line ensures that the Material Icons font is
@@ -108,14 +106,17 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 
-# Windows Store / sideload packaging: `dart run msix:create`.
-# Fill in `publisher` with your certificate subject before signing.
+# Microsoft Store packaging: `dart run msix:create`.
+# Identity, publisher and display name must match the values Partner Center
+# shows for the reserved app name (Product identity page). `store: true` skips
+# local signing — the Store signs the package itself.
 msix_config:
-  display_name: Tempo
-  publisher_display_name: Tempo
-  identity_name: com.tempo.desktop
+  display_name: tempo time
+  publisher_display_name: rahoz osman
+  identity_name: rahozosman.tempotime
+  publisher: CN=74E58D7B-C8D8-4939-83AF-C2EE41E72A19
   msix_version: 1.0.0.0
   logo_path: assets/branding/app_icon.png
   architecture: x64
   capabilities: ""
-  # publisher: CN=Your Name, O=Your Organisation, C=IQ
+  store: true

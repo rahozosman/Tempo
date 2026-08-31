@@ -19,10 +19,6 @@ Future<void> main(List<String> arguments) async {
   await TempoWindowEffect.initialise();
   final bool hidden = arguments.contains(hiddenLaunchFlag);
   await configureWindow(startHidden: hidden);
-  if (hidden) {
-    launchDone.value = true;
-    launchReveal.value = 1;
-  }
   configureStartup();
 
   // The database is opened before the first frame so every screen can read it
@@ -33,9 +29,28 @@ Future<void> main(List<String> arguments) async {
       ? const <String, String>{}
       : await database.settings.all();
 
+  // Opened at sign-in, before the first run has explained what is measured,
+  // Tempo would sit in the tray recording nothing and unable to say why. It
+  // shows itself instead; from the next sign-in on, it stays in the tray.
+  final bool stayHidden =
+      hidden && settings[SettingsKeys.onboardingCompleted] == 'true';
+  if (stayHidden) {
+    // Nobody is watching an opening that happens off screen, so the app is
+    // handed over already finished.
+    launchDone.value = true;
+    launchReveal.value = 1;
+  } else if (hidden) {
+    await revealWindow();
+  }
+
   // Applied on the way in rather than in the background: history the person
   // asked not to keep should not outlive the launch that noticed.
   await _applyRetention(database, settings);
+
+  // Repaired here rather than at the toggle, because the thing that breaks it
+  // — Tempo being moved, or never registered at all — happens while Tempo is
+  // not running to see it.
+  await ensureStartupRegistered(database: database, settings: settings);
 
   runApp(
     ProviderScope(

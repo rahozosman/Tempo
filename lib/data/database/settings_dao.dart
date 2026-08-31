@@ -55,6 +55,7 @@ class SettingsKeys {
   static const String trackingEnabled = 'tracking.enabled';
   static const String onboardingCompleted = 'onboarding.completed';
   static const String keepRunning = 'general.keep_running';
+  static const String launchAtStartup = 'general.launch_at_startup';
   static const String notifications = 'general.notifications';
   static const String retentionDays = 'data.retention_days';
   static const String weeklyDigest = 'general.weekly_digest';

@@ -46,6 +46,20 @@ Future<void> configureWindow({bool startHidden = false}) async {
   });
 }
 
+/// Puts the window on screen after all.
+///
+/// Tempo opened into the tray because the system started it, but something has
+/// come up that cannot be said from a tray icon. The launch is no longer a
+/// hidden one, so the opening plays as it would have.
+Future<void> revealWindow() async {
+  tempoLaunchedHidden = false;
+  if (!TempoPlatform.isDesktop) {
+    return;
+  }
+  await windowManager.show();
+  await windowManager.focus();
+}
+
 /// The size Tempo opens at, never bigger than the screen it opens on.
 ///
 /// The design window is 1440x900. A scaled 1080p laptop has less room than

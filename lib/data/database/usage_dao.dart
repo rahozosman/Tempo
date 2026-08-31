@@ -156,55 +156,55 @@ class UsageDao {
     }
 
     final int spanning = await count(
-      "SELECT COUNT(*) FROM \$sessionsTable WHERE "
+      "SELECT COUNT(*) FROM $sessionsTable WHERE "
       "date(start_ms / 1000, 'unixepoch', 'localtime') != "
       "date(end_ms / 1000, 'unixepoch', 'localtime')",
     );
     if (spanning > 0) {
       issues.add(
-        '\$spanning session(s) start on one day and end on another. Sessions '
+        '$spanning session(s) start on one day and end on another. Sessions '
         'are meant to be closed at midnight.',
       );
     }
 
     final int badDuration = await count(
-      'SELECT COUNT(*) FROM \$sessionsTable WHERE duration_seconds <= 0 '
+      'SELECT COUNT(*) FROM $sessionsTable WHERE duration_seconds <= 0 '
       'OR end_ms < start_ms',
     );
     if (badDuration > 0) {
-      issues.add('\$badDuration session(s) have no length, or end before they '
+      issues.add('$badDuration session(s) have no length, or end before they '
           'start.');
     }
 
     final int future = await count(
-      'SELECT COUNT(*) FROM \$sessionsTable WHERE end_ms > ?',
+      'SELECT COUNT(*) FROM $sessionsTable WHERE end_ms > ?',
       <Object?>[DateTime.now().millisecondsSinceEpoch + 120000],
     );
     if (future > 0) {
-      issues.add('\$future session(s) end in the future.');
+      issues.add('$future session(s) end in the future.');
     }
 
     final int overlapping = await count(
-      'SELECT COUNT(*) FROM \$sessionsTable a JOIN \$sessionsTable b '
+      'SELECT COUNT(*) FROM $sessionsTable a JOIN $sessionsTable b '
       'ON a.id < b.id AND a.day = b.day '
       'AND a.start_ms < b.end_ms AND b.start_ms < a.end_ms',
     );
     if (overlapping > 0) {
       issues.add(
-        '\$overlapping pair(s) of sessions overlap. Only one application can be '
+        '$overlapping pair(s) of sessions overlap. Only one application can be '
         'in front at a time.',
       );
     }
 
     final int drifted = await count(
-      'SELECT COUNT(*) FROM \$dailyTable d LEFT JOIN ('
-      'SELECT day, SUM(duration_seconds) AS total FROM \$sessionsTable '
+      'SELECT COUNT(*) FROM $dailyTable d LEFT JOIN ('
+      'SELECT day, SUM(duration_seconds) AS total FROM $sessionsTable '
       'GROUP BY day) s ON s.day = d.day '
       'WHERE ABS(d.active_seconds - COALESCE(s.total, 0)) > 2',
     );
     if (drifted > 0) {
       issues.add(
-        "\$drifted day(s) have a summary that does not match their sessions. "
+        "$drifted day(s) have a summary that does not match their sessions. "
         'Summaries are meant to be rebuilt from the sessions they cover.',
       );
     }
@@ -216,7 +216,7 @@ class UsageDao {
         ? null
         : check.first.values.first;
     if (verdict is String && verdict.toLowerCase() != 'ok') {
-      issues.add('SQLite reports a problem with the file: \$verdict');
+      issues.add('SQLite reports a problem with the file: $verdict');
     }
 
     return issues;
